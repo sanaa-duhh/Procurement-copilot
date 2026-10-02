@@ -50,7 +50,13 @@ def run(llm: LLMClient, request: dict[str, Any], registry: ToolRegistry, telemet
     trace["evidence_pack"] = pack
 
     # Stage 2: reviewer without tools, over the pack and the raw tool outputs
-    tool_outputs = [{"tool": e["tool"], "args": e["args"], "result": e["result"]} for e in registry.log if e["actor"] == "analyst" or e["actor"] == "policy"]
+    seen: set[str] = set()
+    tool_outputs = []
+    for entry in registry.log:
+        key = entry["tool"] + json.dumps(entry["args"], sort_keys=True, default=str)
+        if entry["actor"] in {"analyst", "policy"} and key not in seen:
+            seen.add(key)
+            tool_outputs.append({"tool": entry["tool"], "args": entry["args"], "result": entry["result"]})
     reviewer_user = (
         request_block(request)
         + "\n\n<analyst_evidence_pack>\n" + json.dumps(pack if pack is not None else {"error": "analyst stage produced no pack"}, indent=2, default=str) + "\n</analyst_evidence_pack>"

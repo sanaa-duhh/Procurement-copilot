@@ -39,6 +39,8 @@ from src.llm import get_llm_client  # noqa: E402
 from src.solution import handle_request_payload  # noqa: E402
 
 PUBLIC_CASES = {c["case_id"]: c for c in json.loads((ROOT / "evals" / "public_cases.json").read_text(encoding="utf-8"))}
+ALL_TOOLS = {"get_requester_profile", "check_budget", "search_software_catalog", "get_vendor_registry_record",
+             "get_vendor_risk_assessment", "get_purchase_history", "run_policy_checks"}
 
 # USD per million tokens; used only for the indicative cost column.
 PRICES = {"claude-opus-5": (5.0, 25.0), "claude-sonnet-5": (2.0, 10.0), "claude-haiku-4-5": (1.0, 5.0), "claude-fable-5-1": (10.0, 50.0)}
@@ -188,7 +190,7 @@ def run_case(case: dict[str, Any], architecture: str, llm: Any, repeat: int) -> 
         "final_grounding_rate": grounding([e.model_dump() for e in decision.evidence], tools_ran),
         "draft_evidence_items": len(draft.get("evidence") or []),
         "draft_grounding_rate": grounding(draft.get("evidence") or [], tools_ran),
-        "agent_tool_coverage": round(len(agent_tools & set(findings and {"get_requester_profile", "check_budget", "search_software_catalog", "get_vendor_registry_record", "get_vendor_risk_assessment", "get_purchase_history", "run_policy_checks"})) / 7, 3),
+        "agent_tool_coverage": round(len(agent_tools & ALL_TOOLS) / len(ALL_TOOLS), 3),
         "llm_calls": tel.llm_calls, "tool_calls": tel.tool_calls, "input_tokens": in_tok, "output_tokens": out_tok,
         "est_cost_usd": round(in_tok / 1e6 * price[0] + out_tok / 1e6 * price[1], 4),
         "stage_latency_ms": json.dumps(tel.stage_latency_ms),
