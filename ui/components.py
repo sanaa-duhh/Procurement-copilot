@@ -1,5 +1,6 @@
 """Small presentation helpers. Business text is escaped before HTML rendering."""
 from html import escape
+from datetime import datetime
 from typing import Any
 
 import streamlit as st
@@ -41,6 +42,19 @@ def esc(value: Any) -> str:
     return escape(str(value if value is not None else "Not provided"), quote=True)
 
 
+def display_time(value: str) -> str:
+    try:
+        return datetime.fromisoformat(value).strftime("%d %b %Y, %H:%M:%S UTC")
+    except ValueError:
+        return value
+
+
+def display_latency(milliseconds: float | None) -> str:
+    if milliseconds is None:
+        return "Not recorded"
+    return f"{milliseconds:.0f} ms" if milliseconds < 1000 else f"{milliseconds/1000:.1f} s"
+
+
 def text(value: Any, css: str = "body-text") -> None:
     st.html(f'<div class="{css}">{esc(value)}</div>')
 
@@ -79,7 +93,7 @@ def request_card(request: dict, employees: dict) -> None:
         '<div class="facts">' + ''.join(f'<div><div class="fact-label">{esc(k)}</div><div class="fact-value">{esc(v)}</div></div>' for k,v in facts) + '</div>'
         '<div class="small-label">Business purpose</div>'
         f'<div class="purpose">{esc(request.get("business_justification") or "Not provided")}</div>'
-        f'<div class="muted" style="margin-top:.9rem">Requested by {esc(person.get("name", request.get("requester_id")))} · {esc(person.get("department", "Department unknown"))} · {esc(str(request.get("urgency") or "normal").capitalize())} priority</div>'
+        f'<div class="muted" style="margin-top:.9rem">Requested by {esc(person.get("name", request.get("requester_name") or request.get("requester_id")))} · {esc(person.get("department", "Department unverified"))} · {esc(str(request.get("urgency") or "normal").capitalize())} priority</div>'
         '</article>'
     )
 

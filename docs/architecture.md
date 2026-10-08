@@ -143,10 +143,35 @@ Tests and default evaluations exercise the actual vendor API handlers in-process
 
 ## Product interface
 
-`app.py` is the page entry point. `ui/review.py` owns request input and human review; `ui/comparison.py` reads the saved benchmark. Shared presentation and handoff formatting live in `ui/components.py`, with styles in `ui/styles.css`. The evaluated code under `src/` is unchanged by this interface redesign.
+`app.py` is the page entry point. `ui/review.py` owns request input and human review; `ui/comparison.py` offers current-request comparison and the fixed benchmark. Shared presentation and handoff formatting live in `ui/components.py`, with styles in `ui/styles.css`. The evaluated code under `src/` is unchanged by these application features.
 
 `ui/themes/dark.css` and `ui/themes/light.css` supply separate colour tokens for the shared layout. The native theme switch is per session, with a `theme` query parameter to preserve the choice on refresh. Appearance is excluded from the decision context: switching it keeps the exact run and never invokes the agent. The textured background and reflective shapes are CSS, with decorative content hidden from screen readers and movement disabled for reduced-motion preferences. Browser checks cover the installed Streamlit controls, popup options, text contrast in request selectors and mobile overflow in both themes.
 
-Only the explicit analysis button calls `handle_request_payload`. Input changes invalidate stale results. Tab navigation, downloads, saving a human review and inspecting the saved benchmark make no model calls. Result tabs retain their selection across reruns, so validation and saved-review feedback stay visible. Readable handoffs include run identity, model/mode, policy evidence and required approvals.
+Only the explicit analysis or comparison run buttons call `handle_request_payload`, through `ui/runs.py`. Input changes invalidate stale displayed results. Tab navigation, downloads, saving a human review and inspecting saved analyses or the benchmark make no model calls. Result tabs retain their selection across reruns, so validation and saved-review feedback stay visible. Readable handoffs include run identity, model/mode, policy evidence and required approvals.
 
 The project config sets Streamlit's toolbar to minimal and the interface removes its developer/deployment chrome. See the [official configuration reference](https://docs.streamlit.io/develop/api-reference/configuration/config.toml). The application has no cache-clear or deployment action. Its tool cache exists only within an individual analysis.
+
+## Persistence and exploratory comparison
+
+```mermaid
+flowchart LR
+    I[Typed or sample request] --> E[Explicit analysis]
+    E --> P[Shared agent and policy pipeline]
+    P --> R[Immutable run snapshot]
+    R --> S[(Local SQLite history)]
+    S --> V[View original result and evidence]
+    S --> C[Compare matching single and staged runs]
+    C --> M[Run only a missing design on request]
+    M --> P
+    B[Fixed labelled benchmark] --> D[Evidence for the ship decision]
+```
+
+`ui/history.py` stores each request, result, full diagnostic trace, run ID, creation time and analysis configuration in `logs/analyses.sqlite3`. SQLite transactions serialize local writes. A repeated identical save is idempotent; changing an existing run is rejected. Model fallbacks are retained with their errors. A failed write leaves the result in the current session with a visible warning and download options. Runtime history is ignored by Git; benchmark artifacts remain committed and unchanged.
+
+A matching input requires the full request hash, architecture, provider, model, effort, analysis-code/data/lockfile hash and vendor endpoint. UI themes do not invalidate analysis. This detects local changes, not changes inside an external service. The UI therefore shows snapshot timestamps and never calls a saved result fresh evidence. Historical benchmark results and configuration-mismatched runs are inspectable, but a new human review requires a run under the current configuration.
+
+The request-comparison view reuses compatible runs and invokes only missing designs when explicitly requested. A successful first result survives failure of the second; a retry targets the missing design. A request pair displays action/approval/risk differences, evidence, corrections and measured resource use. It has no ground-truth labels and never changes the fixed benchmark's accuracy, cost table or memo.
+
+`ui/intake.py` resolves typed names using normalised exact equality, not fuzzy similarity. Duplicate names require an employee ID; an ID must match the supplied name. Unknown names and supplied departments remain in the request, while the unchanged policy engine requires a real directory record for verified budget ownership. No directory mutation or identity-authentication claim is made.
+
+This storage is appropriate for a local assessment demo. A production rollout needs authenticated employees and reviewer roles, per-user access to history, retention/deletion policy, protected backups, current organisational data and actual ticket/approval-system integration.

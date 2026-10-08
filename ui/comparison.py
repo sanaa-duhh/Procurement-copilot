@@ -1,11 +1,14 @@
 """Browse the saved experiment without executing an agent or making model calls."""
 import csv
 import json
+import os
 from pathlib import Path
 
 import streamlit as st
 
-from ui.components import ACTION_LABELS, ARCHITECTURES, chips, hero, table, text
+from ui.components import ACTION_LABELS, ARCHITECTURES, chips, display_latency, display_time, hero, table, text
+from ui import runs
+from ui.history import configuration
 
 EXPERIMENT = "openai-comparison-20261008"
 
@@ -25,10 +28,125 @@ def load_benchmark(root: Path) -> tuple[dict, list[dict], dict]:
     return report, rows, {(r["case_id"], r["architecture"]): r for r in records}
 
 
-def render(root: Path) -> None:
+def render(root: Path, *, provider: str, model: str) -> None:
     hero("Compare the architectures", "let the evidence decide.",
          "The same requests, tools and policy controls. Explore what a second reviewer changes, and what it costs.",
          key="comparison_hero", eyebrow="02 / THE ARCHITECTURE LAB")
+    current, benchmark = st.tabs(["This request", "18-case benchmark"], key="comparison_views", on_change="rerun")
+    with current:
+        render_current(root, provider=provider, model=model)
+    with benchmark:
+        render_benchmark(root)
+
+
+def render_current(root: Path, *, provider: str, model: str) -> None:
+    request = st.session_state.get("current_request")
+    if not request:
+        st.info("Select or enter a request in Review a request. Its two architecture results will appear here.")
+        return
+    config = configuration(root, provider, model)
+    pair_key = runs.context(request, config, "both")
+    previous = st.session_state.get("comparison_pair", {})
+    pair = previous["runs"] if previous.get("key") == pair_key else {
+        arch: runs.latest(root, request, config, arch) for arch in ("single", "staged")}
+    text(f"{request.get('product_name') or 'Untitled request'} · {request['request_id']}", "request-heading")
+    st.caption("Uses the exact request selected in the review workspace. Existing runs with matching inputs and settings are reused; nothing runs just by opening this page.")
+    missing = [a for a in ("single", "staged") if pair[a] is None]
+    credentials = provider == "mock" or bool(os.getenv("OPENAI_API_KEY"))
+    if provider == "mock":
+        st.caption("Scripted demo: this comparison checks the workflow and does not measure model intelligence.")
+    else:
+        st.caption(f"OpenAI · {model} · {config['effort']} reasoning. Running the missing design uses API credits; running both again pays for two fresh analyses.")
+    label = "Compare this request" if len(missing) == 2 else f"Run {ARCHITECTURES[missing[0]].lower()} for comparison" if missing else "Run both again"
+    if st.button(label, key="compare_request", type="primary", disabled=not credentials):
+        targets = missing or ["single", "staged"]
+        if not missing:
+            pair = {"single": None, "staged": None}
+        if st.session_state.get("architecture") in targets:
+            for key in ("decision", "decision_record", "saved_review"):
+                st.session_state.pop(key, None)
+        failures = []
+        for architecture in targets:
+            with st.status(f"Running {ARCHITECTURES[architecture].lower()}…", expanded=True) as progress:
+                try:
+                    record = runs.execute(root, request, config, architecture)
+                except Exception as exc:
+                    failures.append(f"{ARCHITECTURES[architecture]}: {type(exc).__name__}: {exc}")
+                    progress.update(label="Analysis could not finish", state="error")
+                else:
+                    pair[architecture] = record
+                    if st.session_state.get("architecture") == architecture:
+                        runs.activate(record, runs.context(request, config, architecture))
+                    progress.update(label="Analysis complete" if not record.decision.trace.get("errors") else "Policy fallback; model stage failed",
+                                    state="complete" if not record.decision.trace.get("errors") else "error")
+        st.session_state["comparison_pair"] = {"key": pair_key, "runs": pair, "failures": failures}
+        st.rerun()
+    if previous.get("key") == pair_key and previous.get("failures"):
+        st.error("The comparison is incomplete. Completed runs were saved; retry only the missing design using the button above.")
+        with st.expander("Comparison error details"):
+            for failure in previous["failures"]:
+                text(failure)
+    if st.session_state.get("history_error"):
+        st.warning(st.session_state["history_error"])
+    if not any(pair.values()):
+        st.info("No matching analyses yet. Compare both here, or analyse one in the review workspace and return to run only the other.")
+        return
+    for arch, column in zip(("single", "staged"), st.columns(2, gap="large")):
+        with column:
+            st.subheader(ARCHITECTURES[arch])
+            record = pair[arch]
+            if record is None:
+                st.caption("Not run with this request and configuration yet.")
+                continue
+            decision = record.decision
+            st.caption(f"{display_time(record.created_at)} · run {record.run_id[:8]} · {record.config['model']}")
+            text(ACTION_LABELS.get(decision.next_action, "No action"), "request-heading")
+            if decision.trace.get("errors"):
+                st.warning("Model stage failed; this is a deterministic fallback, not a successful model recommendation.")
+            text(decision.next_step)
+            chips(decision.required_approvals)
+            with st.expander("Evidence and required information"):
+                for evidence in decision.evidence:
+                    text(evidence.finding)
+                    text(f"{evidence.source} · {evidence.reference}", "evidence-source")
+                st.write("Required information:")
+                for item in decision.missing_information or ["No mandatory intake fields are missing."]:
+                    text(item)
+                if decision.risk_flags:
+                    chips(decision.risk_flags, risk=True)
+            with st.expander("Raw draft and policy corrections"):
+                for correction in decision.telemetry.guardrail_corrections or ["No field corrections."]:
+                    text(correction)
+                st.json(decision.trace.get("draft", {}), expanded=False)
+    if all(pair.values()):
+        first, second = pair["single"].decision, pair["staged"].decision
+        different = []
+        for field, label in [("next_action", "next action"), ("required_approvals", "approvals"),
+                             ("missing_information", "required information"), ("risk_flags", "risk flags")]:
+            a, b = getattr(first, field), getattr(second, field)
+            differs = set(a) != set(b) if isinstance(a, list) else a != b
+            if differs:
+                different.append(label)
+        if different:
+            st.warning("The designs differ on: " + ", ".join(different) + ". Inspect the evidence and policy corrections before choosing a next step.")
+        else:
+            st.success("Both designs agree on the next action, approvals, required information and risk flags.")
+        table(["This request", "Single agent", "Analyst + reviewer"], [
+            ["Analysis time", *[display_latency(r.decision.telemetry.latency_ms) for r in pair.values()]],
+            ["Model calls", *[r.decision.telemetry.llm_calls for r in pair.values()]],
+            ["Executed tool calls", *[r.decision.telemetry.tool_calls for r in pair.values()]],
+            ["Input / output tokens", *[f"{r.decision.telemetry.input_tokens:,} / {r.decision.telemetry.output_tokens:,}" for r in pair.values()]],
+            ["Policy field corrections", *[len(r.decision.telemetry.guardrail_corrections) for r in pair.values()]],
+        ])
+        st.caption("These are independent runs on the same request and configuration; vendor evidence may change between runs. This request has no labelled answer, so agreement is not an accuracy score. Use the fixed 18-case benchmark to assess the overall architecture choice.")
+    st.caption("Saved results can also be opened from the review workspace under the matching analysis approach.")
+    st.download_button("Download this comparison", json.dumps({"kind": "unlabelled_request_comparison", "request": request,
+                       "config": config, "runs": {a: r.payload() if r else None for a, r in pair.items()}}, indent=2, default=str),
+                       "request_comparison.json", "application/json", on_click="ignore", key="download_request_comparison")
+
+
+def render_benchmark(root: Path) -> None:
+    st.subheader("The saved architecture experiment")
     try:
         report, rows, records = load_benchmark(root)
     except (OSError, ValueError, KeyError) as exc:

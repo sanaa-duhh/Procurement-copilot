@@ -20,10 +20,15 @@ venv/
 .env.*
 !.env.example
 *.key
+.streamlit/secrets.toml
 
 # Local runtime output
 logs/*
 !logs/.gitkeep
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+*.sqlite3-journal
 evals/results_*.csv
 evals/results/mock/
 

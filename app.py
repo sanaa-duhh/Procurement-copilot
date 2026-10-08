@@ -52,6 +52,6 @@ with review_tab:
     else:
         review.render(requests, employees, provider=provider, model=model, audit_log=ROOT/"logs/human_decisions.jsonl")
 with comparison_tab:
-    comparison.render(ROOT)
+    comparison.render(ROOT, provider=provider, model=model)
 
 st.html(f'<div class="footer-note">Policy snapshot {esc(reference_date())} · Synthetic assessment data · Reviews are recorded locally; a human completes the approval process.</div>')

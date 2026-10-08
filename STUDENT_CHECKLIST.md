@@ -6,6 +6,10 @@
 - [x] UI includes request details, verified evidence, recommendation and human action.
 - [x] Saved architecture comparison is browsable in the app without paid calls.
 - [x] Input changes clear stale results; review saves and downloads do not rerun analysis.
+- [x] Analysis history survives restart; saved snapshots keep run identity, inputs, evidence and traces.
+- [x] Typed requester names are accepted; unknown/ambiguous identities require verification.
+- [x] Current-request comparison reuses matching runs and retries only a missing design.
+- [x] README maps every final-brief requirement to implementation and evidence, with decision tradeoffs.
 - [x] Seven deterministic tools have locally validated input schemas.
 - [x] Policy checks enforce thresholds, budget, vendor dates/conflicts and required reviews.
 - [x] Structured model outputs are locally validated; tool loops are bounded.
@@ -22,6 +26,6 @@
 - [x] Inspect raw drafts, grounding, latency/calls/tokens and architecture disagreements.
 - [x] Replace the provisional memo with a results-backed ship decision (≤500 words).
 - [x] Fill the README comparison from the real artifacts and remove pending notices.
-- [ ] Owner: create/push the public GitHub repository and check the URL while signed out.
+- [ ] Owner: push the public GitHub repository and check the URL while signed out.
 - [x] Confirm no credentials or private runtime review logs are tracked.
 - [ ] Submit the public repository URL through the [assignment form](https://forms.gle/ab9DrohuNQWukXCD9) before 8 October, 11:59 PM.
