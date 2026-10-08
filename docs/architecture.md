@@ -145,6 +145,8 @@ Tests and default evaluations exercise the actual vendor API handlers in-process
 
 `app.py` is the page entry point. `ui/review.py` owns request input and human review; `ui/comparison.py` reads the saved benchmark. Shared presentation and handoff formatting live in `ui/components.py`, with styles in `ui/styles.css`. The evaluated code under `src/` is unchanged by this interface redesign.
 
+`ui/themes/dark.css` and `ui/themes/light.css` supply separate colour tokens for the shared layout. The native theme switch is per session, with a `theme` query parameter to preserve the choice on refresh. Appearance is excluded from the decision context: switching it keeps the exact run and never invokes the agent. The textured background and reflective shapes are CSS, with decorative content hidden from screen readers and movement disabled for reduced-motion preferences. Browser checks cover the installed Streamlit controls, popup options, text contrast in request selectors and mobile overflow in both themes.
+
 Only the explicit analysis button calls `handle_request_payload`. Input changes invalidate stale results. Tab navigation, downloads, saving a human review and inspecting the saved benchmark make no model calls. Result tabs retain their selection across reruns, so validation and saved-review feedback stay visible. Readable handoffs include run identity, model/mode, policy evidence and required approvals.
 
 The project config sets Streamlit's toolbar to minimal and the interface removes its developer/deployment chrome. See the [official configuration reference](https://docs.streamlit.io/develop/api-reference/configuration/config.toml). The application has no cache-clear or deployment action. Its tool cache exists only within an individual analysis.

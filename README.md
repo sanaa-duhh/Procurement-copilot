@@ -4,15 +4,15 @@ A procurement reviewer should be able to answer three questions: **What should h
 
 Built for FDE Assessment 3 by Sanaa. [Reviewer walkthrough](docs/review_guide.md) · [Architecture](docs/architecture.md) · [Evaluation](evals/README.md) · [Decision memo](docs/architecture_decision.md)
 
-![Conflicting vendor evidence produces a manual-review recommendation](docs/images/demo-conflicting-vendor.png)
+![Procurement workspace with a deep teal theme](docs/images/review-workspace.png)
 
-*Scripted demo: a conflicting vendor assessment leads to manual review. The decision and next step appear first; evidence, human review and run details sit underneath.*
+*Scripted demo workspace. The Light mode switch changes to a [soft mint theme](docs/images/review-workspace-light.png). Both appearances use the same review workflow.*
 
 ![Saved architecture comparison inside the app](docs/images/architecture-comparison.png)
 
 *The comparison view reads the saved live experiment. Browsing scores, individual cases and the memo makes no model calls.*
 
-> **Verified locally:** 116 tests pass; the full OpenAI comparison is saved. **Ship choice: single agent.** Pushing the repository, checking public access and submitting its URL remain the owner’s steps.
+> **Verified locally:** 117 tests pass; the full OpenAI comparison is saved. **Ship choice: single agent.** Pushing the repository, checking public access and submitting its URL remain the owner’s steps.
 
 ## Try it
 
@@ -58,6 +58,8 @@ flowchart LR
 ```
 
 **Review a request** has a full-width intake and decision flow. After analysis, request details collapse and the next step is prominent. Evidence, human review and diagnostics have their own tabs. The app hides Streamlit’s developer toolbar and deployment prompt; its visible controls are specific to the review workflow.
+
+The header's **Light mode** switch preserves the current request and analysis. The selected appearance survives a refresh of the same URL. Decorative gradients and reflective forms are generated with CSS; no image service, external asset host or model call is involved. Reduced-motion preferences disable the subtle decorative movement.
 
 Selecting or editing a request does not call the model. **Analyse request** starts a run, and **Analyse again** explicitly starts a fresh one. Changing request content or approach invalidates the old result. Downloads, review saves and comparison browsing never rerun the agent.
 

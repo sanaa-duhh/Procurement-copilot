@@ -17,13 +17,28 @@ from ui.components import esc
 ROOT = Path(__file__).resolve().parent
 st.set_page_config(page_title="Procurement Copilot", page_icon=":material/fact_check:", layout="wide", initial_sidebar_state="collapsed")
 st.set_option("client.toolbarMode", "minimal")
-st.html(f"<style>{(ROOT/'ui/styles.css').read_text()}</style>")
+if "light_mode" not in st.session_state:
+    st.session_state["light_mode"] = st.query_params.get("theme") == "light"
+
+
+def remember_theme() -> None:
+    # Keep the selected appearance when this URL is refreshed, per browser tab.
+    st.query_params["theme"] = "light" if st.session_state["light_mode"] else "dark"
+
+
+theme = "light" if st.session_state.get("light_mode", False) else "dark"
+st.html(f"<style>{(ROOT/f'ui/themes/{theme}.css').read_text()}\n{(ROOT/'ui/styles.css').read_text()}</style>")
 
 provider = os.getenv("LLM_PROVIDER", "openai")
 model = configured_model(provider)
 mode = "Scripted demo" if provider == "mock" else "Live OpenAI"
-st.html('<div class="brandbar"><div class="brand"><span class="brand-mark" aria-hidden="true">P</span>Procurement Copilot</div>'
-        f'<div class="mode"><span class="mode-dot" aria-hidden="true"></span>{esc(mode)} · Human approval required</div></div>')
+with st.container(key="app_header"):
+    identity, appearance = st.columns([5, 1], vertical_alignment="center")
+    with identity:
+        st.html('<div class="brandbar"><div class="brand"><span class="brand-mark" aria-hidden="true">P</span><div>Procurement Copilot<div class="brand-subtitle">EVIDENCE BEFORE COMMITMENT</div></div></div>'
+                f'<div class="mode"><span class="mode-dot" aria-hidden="true"></span>{esc(mode)}</div></div>')
+    with appearance:
+        st.toggle("Light mode", key="light_mode", on_change=remember_theme)
 
 review_tab, comparison_tab = st.tabs(["Review a request", "Compare architectures"], key="workspace_tabs", on_change="rerun")
 with review_tab:

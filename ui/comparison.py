@@ -5,7 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from ui.components import ACTION_LABELS, ARCHITECTURES, chips, table, text
+from ui.components import ACTION_LABELS, ARCHITECTURES, chips, hero, table, text
 
 EXPERIMENT = "openai-comparison-20261008"
 
@@ -26,8 +26,9 @@ def load_benchmark(root: Path) -> tuple[dict, list[dict], dict]:
 
 
 def render(root: Path) -> None:
-    st.title("Compare the architectures")
-    text("The same requests, tools and policy controls. Inspect what the extra reviewer changes.", "intro")
+    hero("Compare the architectures", "let the evidence decide.",
+         "The same requests, tools and policy controls. Explore what a second reviewer changes, and what it costs.",
+         key="comparison_hero", eyebrow="02 / THE ARCHITECTURE LAB")
     try:
         report, rows, records = load_benchmark(root)
     except (OSError, ValueError, KeyError) as exc:

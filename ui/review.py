@@ -8,7 +8,7 @@ import streamlit as st
 
 from src.audit import record_review, request_fingerprint
 from src.solution import handle_request_payload
-from ui.components import ACTION_LABELS, ARCHITECTURES, DATA_LABELS, SOURCE_LABELS, chips, esc, handoff_document, request_card, text
+from ui.components import ACTION_LABELS, ARCHITECTURES, DATA_LABELS, SOURCE_LABELS, chips, esc, handoff_document, hero, request_card, text
 
 DATA_LEVELS = ["unknown", "none", "internal_documents", "internal_marketing", "source_code", "production_telemetry",
                "confidential_documents", "employee_pii", "customer_pii"]
@@ -147,12 +147,14 @@ def show_decision(decision, request: dict, audit_log: Path) -> None:
 
 
 def render(requests: list[dict], employees: dict, *, provider: str, model: str, audit_log: Path) -> None:
-    st.title("Review a purchase")
-    text("Understand the need, check the evidence, and give the right people a clear next step.", "intro")
-    left, right = st.columns([1, 1], gap="large")
-    source = left.radio("Request source", ["Sample request", "New request"], horizontal=True, key="request_source")
-    architecture = right.radio("Analysis approach", ["single", "staged"], horizontal=True, format_func=ARCHITECTURES.get, key="architecture")
-    text("Single agent gathers evidence and recommends an action. Analyst + reviewer separates those two responsibilities.", "approach-note")
+    hero("Review a purchase", "with the full picture.",
+         "The need. The evidence. The right next step. A considered recommendation, with a human in control.",
+         key="review_hero", eyebrow="01 / THE REVIEW WORKSPACE")
+    with st.container(key="request_controls"):
+        left, right = st.columns([1, 1], gap="large")
+        source = left.radio("Request source", ["Sample request", "New request"], horizontal=True, key="request_source")
+        architecture = right.radio("Analysis approach", ["single", "staged"], horizontal=True, format_func=ARCHITECTURES.get, key="architecture")
+        text("Single agent gathers evidence and recommends an action. Analyst + reviewer separates those two responsibilities.", "approach-note")
     if source == "Sample request":
         by_id = {r["request_id"]: r for r in requests}
         rid = st.selectbox("Choose a request", list(by_id), format_func=lambda k: f"{k} · {by_id[k]['product_name']}", key="sample_request")

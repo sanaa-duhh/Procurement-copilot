@@ -6,9 +6,9 @@ showSidebarNavigation = false
 gatherUsageStats = false
 
 [theme]
-base = "light"
-primaryColor = "#14675c"
-backgroundColor = "#f5f6f4"
-secondaryBackgroundColor = "#edf1ee"
-textColor = "#202e2b"
+base = "dark"
+primaryColor = "#91e3c4"
+backgroundColor = "#071315"
+secondaryBackgroundColor = "#11292b"
+textColor = "#e4f4ee"
 font = "sans serif"

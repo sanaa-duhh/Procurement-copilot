@@ -114,6 +114,22 @@ def test_missing_live_key_disables_analysis(monkeypatch, calls):
     assert calls == []
 
 
+def test_theme_switch_preserves_analysis_and_request_without_model_calls(calls):
+    at = app()
+    assert at.toggle(key="light_mode").value is False
+    at.toggle(key="light_mode").set_value(True).run()
+    assert not at.exception
+    assert calls == []
+    at.button(key="analyse").click().run()
+    run_id = at.session_state["decision"].run_id
+    request_id = at.selectbox(key="sample_request").value
+    at.toggle(key="light_mode").set_value(False).run()
+    assert not at.exception
+    assert at.session_state["decision"].run_id == run_id
+    assert at.selectbox(key="sample_request").value == request_id
+    assert len(calls) == 1
+
+
 def test_failed_rerun_does_not_leave_an_old_recommendation(monkeypatch, calls):
     at = app()
     at.button(key="analyse").click().run()

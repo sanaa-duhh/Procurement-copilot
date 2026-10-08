@@ -45,6 +45,19 @@ def text(value: Any, css: str = "body-text") -> None:
     st.html(f'<div class="{css}">{esc(value)}</div>')
 
 
+def hero(title: str, subtitle: str, description: str, *, key: str, eyebrow: str) -> None:
+    """Decorative CSS sculpture, kept out of the reading and keyboard order."""
+    with st.container(key=key):
+        text(eyebrow, "hero-eyebrow")
+        st.title(title)
+        text(subtitle, "hero-subtitle")
+        text(description, "intro")
+        st.html('<div class="sculpture" aria-hidden="true"><div class="sculpture-halo"></div>'
+                '<div class="orbit orbit-back"></div><div class="orbit orbit-front"></div>'
+                '<div class="orbit orbit-small"></div><div class="pearl pearl-one"></div>'
+                '<div class="pearl pearl-two"></div><div class="sculpture-floor"></div></div>')
+
+
 def chips(values: list[str], *, risk: bool = False) -> None:
     labels = [RISK_LABELS.get(v, v.replace("_", " ").capitalize()) for v in values] if risk else values
     st.html('<div class="chips">' + ''.join(f'<span class="chip{" risk" if risk else ""}">{esc(v)}</span>' for v in labels) + '</div>')

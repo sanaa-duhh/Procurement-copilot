@@ -25,7 +25,7 @@ The evidence panel is code-authored. The Evidence tab displays full findings and
 
 ## Verification and submission
 
-The local suite passes 116 tests. The complete live comparison records 18/18 single-agent and 17/18 staged final checks, with raw drafts and all failures preserved. Both pass the six original public cases. The memo recommends the single agent; the case analysis explains the staged sequencing disagreement and the difference between missing intake fields and reviewer questions.
+The local suite passes 117 tests. The complete live comparison records 18/18 single-agent and 17/18 staged final checks, with raw drafts and all failures preserved. Both pass the six original public cases. The memo recommends the single agent; the case analysis explains the staged sequencing disagreement and the difference between missing intake fields and reviewer questions.
 
 The main experiment measures source `0de3dc7`. The only subsequent agent-code change is three money-formatting expressions in `src/rules.py`; calculations, prompts, actions and labels are unchanged. Separate threshold trials verify that precision fix. UI changes expose long findings and optional reviewer questions without changing the evaluated decision contract. The presentation lives in ui/, outside the evaluated agent-source fingerprint.
 
