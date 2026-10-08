@@ -1,10 +1,10 @@
-"""Drive the Streamlit product UI headlessly with the scripted mock model."""
-from __future__ import annotations
-
+"""Interaction checks: a model run requires a click; reviews and browsing do not bill."""
 from pathlib import Path
 
 import pytest
 from streamlit.testing.v1 import AppTest
+
+from ui import review
 
 APP = str(Path(__file__).resolve().parents[1] / "app.py")
 
@@ -14,42 +14,114 @@ def mock_provider(monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "mock")
 
 
-def test_ui_renders_request_evidence_and_recommendation():
-    at = AppTest.from_file(APP, default_timeout=60).run()
+@pytest.fixture
+def calls(monkeypatch):
+    actual = review.handle_request_payload
+    recorded = []
+    def run(request, **kwargs):
+        recorded.append((dict(request), kwargs))
+        return actual(request, **kwargs)
+    monkeypatch.setattr(review, "handle_request_payload", run)
+    return recorded
+
+
+def app():
+    return AppTest.from_file(APP, default_timeout=60).run()
+
+
+def test_analysis_requires_explicit_click_and_renders_review(calls):
+    at = app()
     assert not at.exception
-    assert at.title[0].value == "Procurement Request Copilot"
-    at.sidebar.button[0].click().run()          # Run analysis
+    assert at.title[0].value == "Review a purchase"
+    assert calls == []
+    at.button(key="analyse").click().run()
     assert not at.exception
-    body = " ".join(m.value for m in at.markdown)
-    assert "Approvals required" in body
-    assert "Next step" in body
-    assert any("Evidence" in s.value for s in at.subheader)
-    assert any("Annual amount" in e.label for e in at.expander)
+    assert len(calls) == 1
+    assert at.session_state["decision"].human_review_required
+    assert {"Evidence", "Human review", "Run details"} <= {t.label for t in at.tabs}
+    assert any("Required approvals" in m.value for m in at.markdown)
 
 
-def test_ui_human_action_requires_reviewer_name():
-    at = AppTest.from_file(APP, default_timeout=60).run()
-    at.sidebar.button[0].click().run()
-    form_button = [b for b in at.button if b.label == "Record decision"][0]
-    form_button.click().run()
-    assert any("reviewer name is required" in e.value for e in at.error)
-
-
-def test_changing_architecture_hides_old_decision():
-    at = AppTest.from_file(APP, default_timeout=60).run()
-    at.sidebar.button[0].click().run()
-    assert any("Annual amount" in e.label for e in at.expander)
-    at.sidebar.radio[0].set_value("staged").run()
+def test_saving_review_requires_name_and_never_reruns_model(calls, monkeypatch, tmp_path):
+    actual_record = review.record_review
+    log = tmp_path / "reviews.jsonl"
+    monkeypatch.setattr(review, "record_review", lambda path, *args, **kwargs: actual_record(log, *args, **kwargs))
+    at = app()
+    at.button(key="analyse").click().run()
+    next(b for b in at.button if b.label == "Save review").click().run()
+    assert any("reviewer name" in e.value for e in at.error)
+    next(t for t in at.text_input if t.label == "Reviewer name").set_value("Sanaa")
+    next(b for b in at.button if b.label == "Save review").click().run()
     assert not at.exception
-    assert not any("Annual amount" in e.label for e in at.expander)
+    assert any("Saved locally" in s.value for s in at.success)
+    next(b for b in at.button if b.label == "Save review").click().run()
+    assert len(log.read_text().splitlines()) == 1
+    assert len(calls) == 1
 
 
-def test_editing_same_new_request_id_hides_old_decision():
-    at = AppTest.from_file(APP, default_timeout=60).run()
-    at.sidebar.radio[1].set_value("New request").run()
-    [b for b in at.sidebar.button if b.label == "Run analysis"][0].click().run()
-    assert any("Request is not ready" in e.label for e in at.expander)
-    [t for t in at.sidebar.text_input if t.label == "Product name"][0].set_value("Changed product")
-    [b for b in at.sidebar.button if b.label == "Use this request"][0].click().run()
+def test_architecture_change_invalidates_previous_decision_without_running(calls):
+    at = app()
+    at.button(key="analyse").click().run()
+    at.radio(key="architecture").set_value("staged").run()
     assert not at.exception
-    assert not any("Request is not ready" in e.label for e in at.expander)
+    with pytest.raises(KeyError):
+        at.session_state["decision"]
+    assert len(calls) == 1
+
+
+def test_request_change_invalidates_previous_decision_without_running(calls):
+    at = app()
+    at.button(key="analyse").click().run()
+    at.selectbox(key="sample_request").set_value("REQ-1007").run()
+    assert not at.exception
+    with pytest.raises(KeyError):
+        at.session_state["decision"]
+    assert len(calls) == 1
+
+
+def test_editing_new_request_invalidates_result_without_running(calls):
+    at = app()
+    at.radio(key="request_source").set_value("New request").run()
+    at.button(key="analyse").click().run()
+    assert at.session_state["decision"].next_action == "request_clarification"
+    at.text_input(key="new_product").set_value("Updated product").run()
+    assert not at.exception
+    with pytest.raises(KeyError):
+        at.session_state["decision"]
+    assert len(calls) == 1
+
+
+def test_browsing_comparison_does_not_run_analysis_or_clear_existing_result(calls):
+    at = app()
+    at.selectbox(key="comparison_case").set_value("PUB-01").run()
+    assert not at.exception
+    assert calls == []
+    at.button(key="analyse").click().run()
+    run_id = at.session_state["decision"].run_id
+    at.selectbox(key="comparison_case").set_value("SYN-17").run()
+    assert not at.exception
+    assert at.session_state["decision"].run_id == run_id
+    assert len(calls) == 1
+
+
+def test_missing_live_key_disables_analysis(monkeypatch, calls):
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    at = app()
+    assert not at.exception
+    assert at.button(key="analyse").disabled
+    assert any("configure OPENAI_API_KEY" in w.value for w in at.warning)
+    assert calls == []
+
+
+def test_failed_rerun_does_not_leave_an_old_recommendation(monkeypatch, calls):
+    at = app()
+    at.button(key="analyse").click().run()
+    def fail(*args, **kwargs):
+        raise RuntimeError("simulated service error")
+    monkeypatch.setattr(review, "handle_request_payload", fail)
+    at.button(key="analyse").click().run()
+    assert not at.exception
+    with pytest.raises(KeyError):
+        at.session_state["decision"]
+    assert any("No new recommendation was saved" in e.value for e in at.error)

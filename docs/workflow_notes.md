@@ -48,3 +48,11 @@ The 36-trial OpenAI comparison favoured the single agent: 18/18 final and raw ch
 Reviewing SYN-13 exposed rounded money in the policy engine's narrative evidence. Exact arithmetic and approval tiers were already correct, but a one-cent shortfall could be displayed as “by $0.” Three regression checks reproduced the problem before the fix. Three formatting expressions now retain two decimal places. A separate live threshold experiment checks the updated source; the main comparison still measures its original fingerprint.
 
 The UI audit also found clipped evidence and hidden references. Findings now expand to show full text and provenance; conflicts open by default. Model-proposed follow-up questions remain separate from policy-required intake fields and are visible to the human reviewer. The README screenshot is a labelled scripted demo, not live model evidence.
+
+## Product interface review
+
+The original three-column screen gave long decisions and evidence too little room. The final interface separates request review from architecture comparison. Intake and the decision use the full workspace width; evidence, human review and diagnostics have dedicated tabs. Findings now show their complete text and references in cards. The comparison view reads the saved OpenAI experiment, including the original disagreement and limitations, without invoking either agent.
+
+Streamlit's developer menu and deployment prompt are hidden. Analysis starts only on an explicit button press. Changing request content or architecture invalidates the displayed recommendation; review saves, downloads and comparison browsing preserve it without another model call. Review confirmation stays visible in its tab, and an unsuccessful rerun cannot leave an old recommendation on screen.
+
+The offline interaction tests cover these state transitions and actual review-log writes. The browser audit exercises both architectures, sample and new requests, four downloads, review validation, untrusted HTML escaping and mobile layouts. Screenshot generation is restricted to the scripted demo. No paid model calls were used to validate this interface change; the saved architecture experiment and agent implementation are unchanged.

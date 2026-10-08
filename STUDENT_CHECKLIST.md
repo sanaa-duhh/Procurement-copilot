@@ -4,6 +4,8 @@
 
 - [x] Both architectures run through the starter-compatible adapter.
 - [x] UI includes request details, verified evidence, recommendation and human action.
+- [x] Saved architecture comparison is browsable in the app without paid calls.
+- [x] Input changes clear stale results; review saves and downloads do not rerun analysis.
 - [x] Seven deterministic tools have locally validated input schemas.
 - [x] Policy checks enforce thresholds, budget, vendor dates/conflicts and required reviews.
 - [x] Structured model outputs are locally validated; tool loops are bounded.

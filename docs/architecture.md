@@ -139,3 +139,12 @@ OpenAI is the only live provider. `src/openai_client.py` calls the Responses API
 OpenAI 429 responses with a numeric Retry-After of up to 60 seconds get at most two retries. Other errors fail visibly. Retry count and wait duration are recorded, and total latency includes throttling. This bounds a failure without silently switching providers or dropping cases.
 
 Tests and default evaluations exercise the actual vendor API handlers in-process; the application uses HTTP. Experiments preserve both raw drafts and final decisions, distinguish model failure from safe fallback, and record a source fingerprint. Resuming an interrupted run requires identical source and experiment settings and never removes prior failed trials.
+
+
+## Product interface
+
+`app.py` is the page entry point. `ui/review.py` owns request input and human review; `ui/comparison.py` reads the saved benchmark. Shared presentation and handoff formatting live in `ui/components.py`, with styles in `ui/styles.css`. The evaluated code under `src/` is unchanged by this interface redesign.
+
+Only the explicit analysis button calls `handle_request_payload`. Input changes invalidate stale results. Tab navigation, downloads, saving a human review and inspecting the saved benchmark make no model calls. Result tabs retain their selection across reruns, so validation and saved-review feedback stay visible. Readable handoffs include run identity, model/mode, policy evidence and required approvals.
+
+The project config sets Streamlit's toolbar to minimal and the interface removes its developer/deployment chrome. See the [official configuration reference](https://docs.streamlit.io/develop/api-reference/configuration/config.toml). The application has no cache-clear or deployment action. Its tool cache exists only within an individual analysis.

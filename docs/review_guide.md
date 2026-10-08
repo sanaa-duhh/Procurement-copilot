@@ -1,6 +1,6 @@
 # Reviewer walkthrough and requirement map
 
-Start with the README's one-command demo. A request remains on the left, retrieved facts and tool traces appear in the centre, and the recommendation plus human handoff appear on the right.
+Start with the README's one-command demo. **Review a request** leads from intake to a full-width decision and next step. Evidence, human review and run details sit in tabs underneath. **Compare architectures** exposes the saved experiment, its individual cases and the decision memo without model calls.
 
 | Assignment requirement / weight | Implementation | Evidence to inspect |
 |---|---|---|
@@ -21,12 +21,12 @@ Start with the README's one-command demo. A request remains on the left, retriev
 - **REQ-1005:** inspect the budget shortfall and all three specialist reviews.
 - **REQ-1008:** a thin reason for another company-wide task tracker. This is the current case where model judgement over overlap is assessed most directly.
 
-The evidence panel is code-authored. Expand a finding to read its full text and source reference; conflicts and unavailable checks open automatically. Model assessment is labelled and can be inspected separately. Expanding the tool trace shows what each role actually retrieved, including cached calls. A review records the decision's run ID and request fingerprint; it does not send an email, route a ticket or approve a purchase.
+The evidence panel is code-authored. The Evidence tab displays full findings and source references without clipping them. Model assessment is labelled and can be inspected separately. Expanding the tool trace shows what each role actually retrieved, including cached calls. A review records the decision's run ID and request fingerprint; it does not send an email, route a ticket or approve a purchase.
 
 ## Verification and submission
 
-The local suite passes 112 tests. The complete live comparison records 18/18 single-agent and 17/18 staged final checks, with raw drafts and all failures preserved. Both pass the six original public cases. The memo recommends the single agent; the case analysis explains the staged sequencing disagreement and the difference between missing intake fields and reviewer questions.
+The local suite passes 116 tests. The complete live comparison records 18/18 single-agent and 17/18 staged final checks, with raw drafts and all failures preserved. Both pass the six original public cases. The memo recommends the single agent; the case analysis explains the staged sequencing disagreement and the difference between missing intake fields and reviewer questions.
 
-The main experiment measures source `0de3dc7`. The only subsequent agent-code change is three money-formatting expressions in `src/rules.py`; calculations, prompts, actions and labels are unchanged. Separate threshold trials verify that precision fix. UI changes expose long findings and optional reviewer questions without changing the evaluated decision contract.
+The main experiment measures source `0de3dc7`. The only subsequent agent-code change is three money-formatting expressions in `src/rules.py`; calculations, prompts, actions and labels are unchanged. Separate threshold trials verify that precision fix. UI changes expose long findings and optional reviewer questions without changing the evaluated decision contract. The presentation lives in ui/, outside the evaluated agent-source fingerprint.
 
 The owner creates a public GitHub repository and pushes the local history, verifies the URL from a signed-out browser, then submits it through the assignment form linked in `STUDENT_CHECKLIST.md`. GitHub CLI authentication is not required to maintain this local history.

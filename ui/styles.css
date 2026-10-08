@@ -1,0 +1,78 @@
+/* Application chrome. Native controls keep their labels and keyboard behaviour. */
+header[data-testid="stHeader"], [data-testid="stToolbar"],
+[data-testid="stAppDeployButton"], #MainMenu, footer { display: none !important; }
+[data-testid="stMainBlockContainer"] { max-width: 1160px; padding: 2rem 2.25rem 4rem; }
+[data-testid="stAppViewContainer"] { background: #f5f6f4; }
+h1, h2, h3 { color: #20332e; letter-spacing: -.035em; }
+h1 { font-size: 2.65rem !important; font-weight: 650 !important; padding-top: .3rem !important; }
+h2 { font-size: 1.5rem !important; }
+h3 { font-size: 1.12rem !important; letter-spacing: -.015em; }
+p, label { line-height: 1.6; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { color: #596c65 !important; }
+[data-testid="stCaptionContainer"] { opacity: 1; }
+[data-testid="stVerticalBlockBorderWrapper"] > div { border-radius: 16px; }
+[data-testid="stForm"] { border-color: #dbe4de; background: #fff; border-radius: 14px; padding: 1.25rem; }
+[data-testid="stBaseButton-primary"] { border-radius: 9px; font-weight: 600; min-height: 44px; }
+[data-testid="stBaseButton-secondary"] { border-radius: 9px; min-height: 42px; }
+[data-baseweb="select"] > div, [data-baseweb="input"], [data-baseweb="textarea"] { border-radius: 9px; }
+[data-baseweb="tab-list"] { gap: 1.5rem; border-bottom: 1px solid #dce3de; }
+[data-baseweb="tab"] { min-height: 48px; font-size: .94rem; }
+[data-baseweb="tab"][aria-selected="true"] { font-weight: 650; }
+[data-testid="stExpander"] { border-radius: 10px; background: #fff; }
+[data-testid="stMetricValue"] { font-size: 1.65rem; }
+.brandbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 0 1.1rem; }
+.brand { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 650; letter-spacing: -.02em; }
+.brand-mark { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 9px; background: #183e34; color: #fff; font: 600 19px Georgia, serif; }
+.mode { display: inline-flex; align-items: center; gap: 7px; color: #436157; font-size: .78rem; }
+.mode-dot { width: 6px; height: 6px; background: #3c8b72; border-radius: 50%; }
+.eyebrow { font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #597467; margin: .5rem 0 .3rem; }
+.intro { color: #5c6c64; font-size: 1rem; margin: -.35rem 0 1.2rem; max-width: 740px; }
+.request-card { border: 1px solid #dde5df; background: #fff; border-radius: 14px; padding: 1.35rem 1.5rem; margin: .25rem 0 .8rem; }
+.request-heading { font-size: 1.18rem; font-weight: 650; color: #213c32; margin-bottom: .15rem; }
+.muted { font-size: .85rem; color: #63736c; }
+.facts { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 1.2rem; margin: 1.2rem 0; }
+.fact-label { font-size: .72rem; color: #6b7b71; margin-bottom: .2rem; }
+.fact-value { font-size: .98rem; font-weight: 600; color: #263e34; overflow-wrap: anywhere; }
+.purpose { color: #34483d; font-size: .92rem; white-space: pre-wrap; line-height: 1.65; }
+.small-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #607568; font-weight: 700; margin-bottom: .35rem; }
+.approach-note { color: #5a6f64; font-size: .84rem; padding: .2rem 0 .8rem; }
+.empty-state { border: 1px dashed #c9d7ce; border-radius: 13px; padding: 1.5rem; margin-top: .65rem; color: #576f60; background: #f0f4f0; }
+.empty-title { font-size: 1rem; font-weight: 650; margin-bottom: .3rem; color: #345440; }
+.decision { padding: 1.5rem 1.6rem; margin: .7rem 0; border: 1px solid #ccdcd0; border-left: 4px solid #388264; border-radius: 13px; background: #edf5ef; }
+.decision.attention { background: #fbf6eb; border-color: #e6d9be; border-left-color: #aa7a28; }
+.decision.blocked { background: #fbf1ec; border-color: #e6d3c5; border-left-color: #b56b43; }
+.decision-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: #59705e; font-size: .76rem; margin-bottom: .65rem; }
+.decision h2 { font-size: 1.65rem !important; margin: 0 0 .5rem; padding: 0; }
+.decision p { margin: 0; color: #354a3b; font-size: .94rem; }
+.next-step { border-top: 1px solid #d9ddd0; padding-top: .9rem; margin-top: 1rem; }
+.chips { display: flex; gap: 7px; flex-wrap: wrap; margin: .35rem 0 1rem; }
+.chip { border: 1px solid #d5ded6; background: #fff; border-radius: 6px; padding: 5px 10px; font-size: .8rem; color: #3a5142; }
+.chip.risk { border-color: #e4d8c3; color: #745a31; background: #faf5eb; }
+.evidence-card { padding: 1.05rem 1.2rem; border: 1px solid #e0e6df; border-radius: 10px; background: #fff; margin: .45rem 0; }
+.evidence-card p { margin: .3rem 0 .5rem; font-size: .93rem; color: #34483d; }
+.evidence-source { font-size: .74rem; color: #708071; overflow-wrap: anywhere; }
+.evidence-title { color: #47634f; font-size: .73rem; font-weight: 650; letter-spacing: .035em; text-transform: uppercase; }
+.body-text { color: #405448; font-size: .95rem; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.architecture-card { padding: 1.25rem; border: 1px solid #dce4dc; border-radius: 12px; background: #fff; height: 100%; }
+.architecture-card.recommended { border-color: #98b6a2; background: #f0f6f0; }
+.architecture-card h3 { margin: .25rem 0 .6rem; }
+.flow { font-size: .82rem; color: #54725e; border-top: 1px solid #dde5dc; padding-top: .75rem; margin-top: .8rem; }
+.compare-table { overflow-x: auto; border: 1px solid #dce4dd; border-radius: 12px; background: #fff; margin: 1rem 0; }
+.compare-table table { width: 100%; border-collapse: collapse; font-size: .89rem; }
+.compare-table th { text-align: left; background: #edf2ed; color: #49604e; font-weight: 650; }
+.compare-table td, .compare-table th { padding: .8rem 1.1rem; border-bottom: 1px solid #e5ebe4; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table td:first-child { color: #59705e; width: 50%; }
+.compare-table td { color: #273f2e; }
+.outcome { font-size: .77rem; color: #38674a; margin-bottom: .5rem; font-weight: 650; }
+.outcome.miss { color: #99572e; }
+.footer-note { border-top: 1px solid #dce4dc; margin-top: 2rem; padding-top: 1rem; font-size: .75rem; color: #718171; }
+@media (max-width: 760px) {
+  [data-testid="stMainBlockContainer"] { padding: 1rem 1rem 3rem; }
+  h1 { font-size: 2rem !important; }
+  .facts { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .9rem; }
+  .request-card, .decision { padding: 1.1rem; }
+  .brandbar { align-items: flex-start; }
+  .mode { font-size: .7rem; text-align: right; }
+  .compare-table td, .compare-table th { padding: .6rem; }
+}

@@ -6,9 +6,13 @@ Built for FDE Assessment 3 by Sanaa. [Reviewer walkthrough](docs/review_guide.md
 
 ![Conflicting vendor evidence produces a manual-review recommendation](docs/images/demo-conflicting-vendor.png)
 
-*Scripted demo: the registry and risk service disagree. The evidence panel exposes both records and the policy reference. Live model results are reported separately below.*
+*Scripted demo: a conflicting vendor assessment leads to manual review. The decision and next step appear first; evidence, human review and run details sit underneath.*
 
-> **Verified locally:** 112 tests pass; the full OpenAI comparison is saved. **Ship choice: single agent.** Public repository creation and URL submission are the owner’s remaining steps.
+![Saved architecture comparison inside the app](docs/images/architecture-comparison.png)
+
+*The comparison view reads the saved live experiment. Browsing scores, individual cases and the memo makes no model calls.*
+
+> **Verified locally:** 116 tests pass; the full OpenAI comparison is saved. **Ship choice: single agent.** Pushing the repository, checking public access and submitting its URL remain the owner’s steps.
 
 ## Try it
 
@@ -37,7 +41,8 @@ The live provider is **OpenAI only**, using `gpt-6-astra` at medium reasoning ef
 3. Run **REQ-1007**: the registry says approved while the risk service says expired. Both sources are shown; a human must resolve the conflict.
 4. Run **REQ-1006**: missing fields and an instruction embedded in the justification. It must request clarification.
 5. Run **REQ-1009**: a deliberate vendor API outage. The app exposes the failed check and escalates.
-6. Record a review and download the decision. The local record includes the exact decision, run ID and request fingerprint. Sending it to approvers is a human step.
+6. Open **Human review**, enter a name and save a review. Download the readable handoff or decision JSON. The local record includes the exact decision, run ID and request fingerprint; sending it to approvers is a human step.
+7. Open **Compare architectures** to inspect the saved comparison and the SYN-17 disagreement. Download the CSV or memo from that view; it never triggers a live analysis.
 
 ## How it works
 
@@ -51,6 +56,10 @@ flowchart LR
     D --> G[Reconcile against verified findings]
     G --> H[Human review and handoff]
 ```
+
+**Review a request** has a full-width intake and decision flow. After analysis, request details collapse and the next step is prominent. Evidence, human review and diagnostics have their own tabs. The app hides Streamlit’s developer toolbar and deployment prompt; its visible controls are specific to the review workflow.
+
+Selecting or editing a request does not call the model. **Analyse request** starts a run, and **Analyse again** explicitly starts a fresh one. Changing request content or approach invalidates the old result. Downloads, review saves and comparison browsing never rerun the agent.
 
 Every response includes the six required fields: **recommendation, evidence, approvals required, missing information, risk flags and next step**. It also includes an action label, a unique run ID and telemetry.
 
@@ -155,7 +164,7 @@ The comparison measures source commit `0de3dc7`. Reviewing it exposed rounded bu
 
 | Path | Purpose |
 |---|---|
-| `app.py`, `run_local.py` | Product and one-command launcher |
+| `app.py`, `ui/`, `run_local.py` | Product entry point, presentation and one-command launcher |
 | `src/solution.py` | Starter-compatible `handle_request(request_id, architecture)` |
 | `src/rules.py`, `src/tools/` | Policy and seven tools |
 | `src/agents/` | Single and staged architectures |
