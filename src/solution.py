@@ -8,6 +8,9 @@ Pipeline for both architectures:
 from __future__ import annotations
 
 from typing import Any
+from uuid import uuid4
+
+from src.audit import request_fingerprint
 
 from src import rules
 from src.agents import single, staged
@@ -38,4 +41,7 @@ def handle_request_payload(request: dict[str, Any], architecture: Architecture =
 
     # The policy engine runs in code regardless of what the agent did; cached tool results are reused.
     findings = rules.evaluate(gather_evidence(registry, actor="guardrail"))
-    return reconcile(draft, findings, registry, request, telemetry, architecture=architecture, model=client.model, trace=trace)
+    decision = reconcile(draft, findings, registry, request, telemetry, architecture=architecture, model=client.model, trace=trace)
+    decision.run_id = str(uuid4())
+    decision.request_fingerprint = request_fingerprint(request)
+    return decision

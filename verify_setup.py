@@ -19,7 +19,8 @@ REQUIRED_MODULES = [
     "dotenv",
     "streamlit",
     "httpx",
-    "anthropic",
+    "openai",
+    "jsonschema",
 ]
 
 
@@ -139,13 +140,13 @@ def check_policy_engine() -> None:
 
 def check_credentials() -> None:
     import os
-    provider = os.getenv("LLM_PROVIDER", "anthropic").lower()
+    provider = os.getenv("LLM_PROVIDER", "openai").lower()
     if provider == "mock":
         ok("LLM_PROVIDER=mock (offline scripted model; evaluation results require a real provider)")
-    elif os.getenv("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN"):
-        ok(f"Anthropic credentials present (model {os.getenv('MODEL_NAME', 'claude-opus-5')})")
+    elif os.getenv("OPENAI_API_KEY"):
+        ok("OpenAI credential present in shell/.env; live API access still needs verification")
     else:
-        print("[WARN] No ANTHROPIC_API_KEY in the environment or .env; the UI and evaluations need it (or LLM_PROVIDER=mock to try offline)")
+        print("[WARN] OPENAI_API_KEY is missing; live evaluation needs it (offline demo does not)")
 
 
 def check_mock_api() -> None:

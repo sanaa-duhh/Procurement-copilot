@@ -33,3 +33,23 @@ def test_ui_human_action_requires_reviewer_name():
     form_button = [b for b in at.button if b.label == "Record decision"][0]
     form_button.click().run()
     assert any("reviewer name is required" in e.value for e in at.error)
+
+
+def test_changing_architecture_hides_old_decision():
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    at.sidebar.button[0].click().run()
+    assert len(at.dataframe) == 1
+    at.sidebar.radio[0].set_value("staged").run()
+    assert not at.exception
+    assert len(at.dataframe) == 0
+
+
+def test_editing_same_new_request_id_hides_old_decision():
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    at.sidebar.radio[1].set_value("New request").run()
+    [b for b in at.sidebar.button if b.label == "Run analysis"][0].click().run()
+    assert len(at.dataframe) == 1
+    [t for t in at.sidebar.text_input if t.label == "Product name"][0].set_value("Changed product")
+    [b for b in at.sidebar.button if b.label == "Use this request"][0].click().run()
+    assert not at.exception
+    assert len(at.dataframe) == 0

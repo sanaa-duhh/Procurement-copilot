@@ -8,15 +8,16 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timezone
 from pathlib import Path
 
 import streamlit as st
 
 from src.contracts import CopilotDecision
+from src.audit import record_review, request_fingerprint
 from src.data_access import load_budgets, load_employees, load_requests, load_software_catalog, load_vendors
 from src.rules import reference_date
 from src.solution import handle_request_payload
+from src.llm import configured_model
 
 ROOT = Path(__file__).resolve().parent
 AUDIT_LOG = ROOT / "logs" / "human_decisions.jsonl"
@@ -44,11 +45,12 @@ with st.sidebar:
     st.header("Run settings")
     architecture = st.radio("Architecture", ["single", "staged"], horizontal=True,
                             help="single: one agent gathers evidence and decides. staged: an analyst gathers, a reviewer decides.")
-    provider = os.getenv("LLM_PROVIDER", "anthropic")
-    model = os.getenv("MODEL_NAME", "claude-opus-5") if provider != "mock" else "scripted mock"
+    provider = os.getenv("LLM_PROVIDER", "openai")
+    model = configured_model(provider)
     st.caption(f"Model: `{model}` · provider `{provider}`")
-    if provider != "mock" and not (os.getenv("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN")):
-        st.warning("No ANTHROPIC_API_KEY found. Add it to .env, or set LLM_PROVIDER=mock to try the flow offline.")
+    credential = "OPENAI_API_KEY"
+    if provider != "mock" and not os.getenv(credential):
+        st.warning(f"No {credential} found. Add it to .env, or set LLM_PROVIDER=mock to try the flow offline.")
 
     source = st.radio("Request source", ["Existing request", "New request"])
     if source == "Existing request":
@@ -56,7 +58,7 @@ with st.sidebar:
         request = dict(BY_ID[request_id])
     else:
         with st.form("new_request"):
-            st.caption("Fields are treated as untrusted data.")
+            st.caption("Describe the purchase and the data it will access.")
             requester_id = st.selectbox("Requester", list(EMPLOYEES.index), format_func=lambda e: f"{e} · {EMPLOYEES.loc[e, 'name']} ({EMPLOYEES.loc[e, 'department']})")
             product_name = st.text_input("Product name")
             vendor_name = st.text_input("Vendor name")
@@ -120,10 +122,10 @@ if run:
             st.error(f"The copilot could not complete this run: {type(exc).__name__}: {exc}")
         else:
             st.session_state["decision"] = decision
-            st.session_state["decision_request"] = request
+            st.session_state["decision_context"] = (request_fingerprint(request), architecture, provider, model)
 
 decision: CopilotDecision | None = st.session_state.get("decision")
-if decision is not None and st.session_state.get("decision_request", {}).get("request_id") != request.get("request_id"):
+if decision is not None and st.session_state.get("decision_context") != (request_fingerprint(request), architecture, provider, model):
     decision = None
 
 # --------------------------------------------------------------------------
@@ -162,6 +164,7 @@ with col_decision:
         st.markdown(f"### {label}")
         st.markdown(decision.recommendation)
         if decision.rationale:
+            st.markdown("**Model assessment · requires human verification**")
             st.caption(decision.rationale)
         st.markdown("**Approvals required**")
         st.markdown("\n".join(f"- {a}" for a in decision.required_approvals) or "_none determinable yet_")
@@ -171,7 +174,7 @@ with col_decision:
             st.markdown("**Missing information**")
             st.markdown("\n".join(f"- {m}" for m in decision.missing_information))
         st.markdown("**Next step**")
-        st.success(decision.next_step)
+        st.info(decision.next_step)
         if decision.telemetry.guardrail_corrections:
             with st.expander(f"Guardrail corrections ({len(decision.telemetry.guardrail_corrections)})"):
                 for c in decision.telemetry.guardrail_corrections:
@@ -188,15 +191,8 @@ with col_decision:
             if not reviewer.strip():
                 st.error("A reviewer name is required.")
             else:
-                AUDIT_LOG.parent.mkdir(exist_ok=True)
-                with AUDIT_LOG.open("a", encoding="utf-8") as f:
-                    f.write(json.dumps({
-                        "recorded_at": datetime.now(timezone.utc).isoformat(),
-                        "request_id": decision.request_id, "architecture": architecture, "reviewer": reviewer.strip(),
-                        "human_action": action, "note": note.strip(), "copilot_next_action": decision.next_action,
-                        "required_approvals": decision.required_approvals, "risk_flags": decision.risk_flags,
-                    }) + "\n")
-                st.success(f"Recorded. The request now goes to {', '.join(decision.required_approvals) or 'the requester'}; nothing has been purchased or approved by the copilot.")
+                event_id = record_review(AUDIT_LOG, decision, reviewer=reviewer, action=action, note=note)
+                st.success(f"Review recorded locally ({event_id[:12]}). Share the downloaded decision with the reviewers to complete the handoff.")
         st.download_button("Download decision JSON", data=json.dumps(decision.model_dump(), indent=2, default=str),
                            file_name=f"{decision.request_id}_{architecture}.json", mime="application/json")
 

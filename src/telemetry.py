@@ -14,13 +14,22 @@ class RunTelemetryCounter:
     cache_hits: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
+    rate_limit_retries: int = 0
+    rate_limit_wait_ms: float = 0
     stage_latency_ms: dict[str, float] = field(default_factory=dict)
     started: float = field(default_factory=time.perf_counter)
 
     def record_llm_call(self, input_tokens: int = 0, output_tokens: int = 0) -> None:
         self.llm_calls += 1
+        self.record_tokens(input_tokens, output_tokens)
+
+    def record_tokens(self, input_tokens: int, output_tokens: int) -> None:
         self.input_tokens += input_tokens
         self.output_tokens += output_tokens
+
+    def record_throttling(self, response) -> None:
+        self.rate_limit_retries += response.rate_limit_retries
+        self.rate_limit_wait_ms += response.rate_limit_wait_ms
 
     def record_tool_call(self, name: str) -> None:
         self.tool_calls += 1

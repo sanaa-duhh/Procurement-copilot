@@ -17,6 +17,8 @@ venv/
 
 # Secrets
 .env
+.env.*
+!.env.example
 *.key
 
 # Local runtime output
@@ -24,3 +26,6 @@ logs/*
 !logs/.gitkeep
 evals/results_*.csv
 evals/results/mock/
+
+# Local untouched reference copy; audited hashes and templates are committed.
+/FDE_Assessment_3_Starter_Pack/

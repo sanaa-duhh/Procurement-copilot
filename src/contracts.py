@@ -65,6 +65,8 @@ class ExtendedTelemetry(RunTelemetry):
     latency_ms: float | None = None
     input_tokens: int = 0
     output_tokens: int = 0
+    rate_limit_retries: int = 0
+    rate_limit_wait_ms: float = 0
     stage_latency_ms: dict[str, float] = Field(default_factory=dict)
     guardrail_corrections: list[str] = Field(default_factory=list)
     architecture: str | None = None
@@ -78,7 +80,9 @@ class CopilotDecision(ProcurementDecision):
     the extra fields are optional and ignored by the public runner.
     """
 
-    next_action: str | None = None
+    run_id: str | None = None
+    request_fingerprint: str | None = None
+    next_action: NextAction | None = None
     rationale: str | None = None
     request_summary: str | None = None
     telemetry: ExtendedTelemetry | None = None

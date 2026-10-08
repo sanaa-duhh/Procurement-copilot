@@ -2,8 +2,8 @@
 
 The model may add context on top of the policy engine but never lower it:
 approvals and risk flags are unioned with the engine's, missing information is
-code-owned, the next action must be in the engine's allowed set, evidence must
-come from a tool that actually ran, and human review is always required.
+code-owned, the next action must be in the engine's allowed set, the factual panel contains
+only code-authored findings from retrieved records, and human review is always required.
 Every correction is recorded so the evaluation can measure how often each
 architecture needed one.
 """
@@ -12,7 +12,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from src.contracts import CopilotDecision, EvidenceItem, ExtendedTelemetry, NEXT_ACTIONS
+from src.contracts import CopilotDecision, ExtendedTelemetry, NEXT_ACTIONS
+from src.evidence import fact_key
 from src.rules import APPROVAL_ORDER, FLAG_TAXONOMY, RuleFindings, sort_approvals
 from src.telemetry import RunTelemetryCounter
 from src.tools import ToolRegistry
@@ -152,39 +153,23 @@ def reconcile(
         next_action = findings.preferred_next_action
         overridden = True
 
-    # Evidence: keep model items grounded in a tool that ran, then add the engine's own items.
-    ran = registry.called_tools() | {"policy_checks", "run_policy_checks"}
-    tool_text = registry.serialized_results().lower()
-    evidence: list[EvidenceItem] = []
-    ungrounded = 0
-    for raw in draft.get("evidence") or []:
-        if not isinstance(raw, dict):
-            continue
-        source = str(raw.get("source") or "").strip()
-        finding = str(raw.get("finding") or "").strip()
-        reference = str(raw.get("reference") or "").strip() or None
-        if not finding:
-            continue
-        if source not in ran:
-            ungrounded += 1
-            continue
-        if reference and reference.lower() not in tool_text and not reference.lower().startswith("policy"):
-            reference = None
-        evidence.append(EvidenceItem(source=source, finding=finding, reference=reference))
+    # The factual panel contains only code-authored facts from this request.
+    # Naming a real tool is insufficient: the claimed value could still be invented.
+    evidence = list(findings.evidence)
+    supported = {fact_key(e.model_dump()) for e in evidence}
+    ungrounded = sum(
+        not isinstance(raw, dict) or fact_key(raw) not in supported
+        for raw in draft.get("evidence") or []
+    )
     if ungrounded:
-        corrections.append(f"dropped {ungrounded} evidence item(s) citing a tool that did not run")
-    seen = {e.finding for e in evidence}
-    for item in findings.evidence:
-        if item.finding not in seen:
-            evidence.append(item)
-            seen.add(item.finding)
+        corrections.append(f"dropped {ungrounded} evidence item(s) without an exact verified fact")
 
     sorted_approvals = sort_approvals(approvals)
     approvals_text = " + ".join(sorted_approvals) if sorted_approvals else "the appropriate approvers"
-    next_step = str(draft.get("next_step") or "").strip()
-    if overridden or not next_step:
-        next_step = NEXT_STEP_TEMPLATES[next_action].format(approvals=approvals_text)
-    recommendation = str(draft.get("recommendation") or "").strip() or _default_recommendation(next_action, findings)
+    # These are operational instructions. Always render from the validated action;
+    # a valid enum must not let 'buy immediately / skip Security' through in prose.
+    next_step = NEXT_STEP_TEMPLATES[next_action].format(approvals=approvals_text)
+    recommendation = _default_recommendation(next_action, findings)
 
     telemetry_out = ExtendedTelemetry(
         llm_calls=telemetry.llm_calls,
@@ -193,6 +178,8 @@ def reconcile(
         latency_ms=telemetry.elapsed_ms(),
         input_tokens=telemetry.input_tokens,
         output_tokens=telemetry.output_tokens,
+        rate_limit_retries=telemetry.rate_limit_retries,
+        rate_limit_wait_ms=telemetry.rate_limit_wait_ms,
         stage_latency_ms=dict(telemetry.stage_latency_ms),
         guardrail_corrections=corrections,
         architecture=architecture,
@@ -219,7 +206,7 @@ def reconcile(
         human_review_required=True,
         telemetry=telemetry_out,
         next_action=next_action,
-        rationale=str(draft.get("rationale") or "").strip() or None,
+        rationale=(str(draft.get("rationale") or "").strip() or None) if not overridden else None,
         request_summary=str(draft.get("request_summary") or "").strip() or None,
         trace=trace,
     )

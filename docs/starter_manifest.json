@@ -1,0 +1,320 @@
+{
+  "source": "User-supplied FDE_Assessment_3_Starter_Pack, compared 2026-10-08",
+  "files": [
+    {
+      "path": ".env.example",
+      "sha256": "16760ed87a14e9883672e8b365ea4aed9ef2e5fd8fb9e9249c9ca93059fddc8a",
+      "handling": "extended"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "7c0ce900c8a9ffe9dd8c61abaec75766e0f1aca8422c71169c5661a98ad30885",
+      "handling": "extended"
+    },
+    {
+      "path": "README.md",
+      "sha256": "45d24017dd2dd4827672ac1c8bc33281bb9954f7f959eb1dae3ca730f4d124ed",
+      "handling": "extended"
+    },
+    {
+      "path": "STUDENT_CHECKLIST.md",
+      "sha256": "a05e672f23eb05c1eb0a2abdda468c56a4aac4718680827f59c0049af22e9ce0",
+      "handling": "extended"
+    },
+    {
+      "path": "app.py",
+      "sha256": "f25ce10808a89f04003f76782b0860f4d5c66adf63d22c1fbd992a72f9e41580",
+      "handling": "extended"
+    },
+    {
+      "path": "data/README.md",
+      "sha256": "e2ef123184e739e94ec3d7e051c5f84d816e89f39b5dcac310aaafcabf5f75e7",
+      "handling": "preserved"
+    },
+    {
+      "path": "data/department_budgets.csv",
+      "sha256": "eaf5ce2fb78803e3f00c42e9eed03c010351e5e1b549f838072411e1aba79f5d",
+      "handling": "preserved"
+    },
+    {
+      "path": "data/employees.csv",
+      "sha256": "b29b06df3773479bf48ea8d00fa3f143dfb74af3c8d25c3f4ddec087bc32d561",
+      "handling": "preserved"
+    },
+    {
+      "path": "data/procurement_policy.md",
+      "sha256": "f7eeea41d757308bc914a5e17f05064c4947e1cceaf2a70e3377b3a9c7cc8f32",
+      "handling": "preserved"
+    },
+    {
+      "path": "data/purchase_history.csv",
+      "sha256": "7294873db67baf414d647ed231280104526221993e463595341105fe9720fb02",
+      "handling": "preserved"
+    },
+    {
+      "path": "data/requests.json",
+      "sha256": "33d2021856138b5d6cbdbc728754be393d65d8f4beb00491b0286f9aaa3d04b9",
+      "handling": "preserved"
+    },
+    {
+      "path": "data/software_catalog.csv",
+      "sha256": "8bf9a22df5c6ac54d68a24270f569bed1a77e783e7b1bedd39d62934736ac99f",
+      "handling": "preserved"
+    },
+    {
+      "path": "data/vendor_risk.json",
+      "sha256": "29bae7370c12f2cec38422c1f75c125a18097de4c7eea82a6763accdd0c2cfdb",
+      "handling": "preserved"
+    },
+    {
+      "path": "data/vendors.csv",
+      "sha256": "a4461bfb6c58486637162e19026ef21efc1cd630015df337b7a8dbd8ef1c7556",
+      "handling": "preserved"
+    },
+    {
+      "path": "docs/Assignment_3_Brief.pdf",
+      "sha256": "967a784e43b08403b07b2e11f9f403bf454804250a76f221a6acc5134d662ac0",
+      "handling": "preserved"
+    },
+    {
+      "path": "evals/README.md",
+      "sha256": "f53e3486863a6a73c53a60f36b2313d6745e4b36e57b38373c70dd15617ec9f4",
+      "handling": "extended"
+    },
+    {
+      "path": "evals/public_cases.json",
+      "sha256": "2cdfc16ceab3f2f6aeacc44f2ccec1efc89ee1e27cabd597e7117912616c8ef5",
+      "handling": "preserved"
+    },
+    {
+      "path": "evals/run_public_evals.py",
+      "sha256": "30e44a356139a551fa29a707149d53080f38aceb7c21650e2bf181324d8cf821",
+      "handling": "preserved"
+    },
+    {
+      "path": "mock_api/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "handling": "preserved"
+    },
+    {
+      "path": "mock_api/app.py",
+      "sha256": "efb516dc2432d4217cfaeb436ee970e8d5a0ed63d65db65b36601700cdbccd6d",
+      "handling": "preserved"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "c56dfc76e00d03c1ec01b5a08ab737d2d6a6f7cb55234cd2c0c5da2f3f0a6e68",
+      "handling": "extended"
+    },
+    {
+      "path": "run_local.py",
+      "sha256": "de435332dbebc9b0f0594bc755f379e3ec5f2a8eef8a0777a58fd4b898684cd9",
+      "handling": "extended"
+    },
+    {
+      "path": "src/__init__.py",
+      "sha256": "947033bbf0fbb99deb46d5855edd5cd2f6d6aa6b8a0bcae6450f723c78f051ab",
+      "handling": "preserved"
+    },
+    {
+      "path": "src/contracts.py",
+      "sha256": "63851b38c3f546eba0e6a3958b40f9ae60a44c10cca590bb15f1d37a649747ac",
+      "handling": "extended"
+    },
+    {
+      "path": "src/data_access.py",
+      "sha256": "7b94caa74417d5a90e03988c3813a9cdcd6f1961387d0125f59e1c5237170faa",
+      "handling": "preserved"
+    },
+    {
+      "path": "src/sample_output.json",
+      "sha256": "63bfc8c3d4650c337b66480fc952ffdf01ba5e30571632a7edcf4447343217f9",
+      "handling": "preserved"
+    },
+    {
+      "path": "src/solution.py",
+      "sha256": "5fbd626d3ae01f27e0c0a710256d262d49de9d456e0653b37ba4fd94ab5905a1",
+      "handling": "extended"
+    },
+    {
+      "path": "src/telemetry.py",
+      "sha256": "1082ef0e4de65c34052f28561ab620e2f21c37664402567e7c39a0bd8c365b1a",
+      "handling": "extended"
+    },
+    {
+      "path": "src/vendor_client.py",
+      "sha256": "e700b34bf02021be1d0fd40564236cacea1ad5a5fc42af8de6f6502dd7a9da2d",
+      "handling": "extended"
+    },
+    {
+      "path": "templates/architecture_decision.md",
+      "sha256": "82d04fffa9e3b6ad02203ad9cd0638959245a981e32d72a39d21d1cb57b4bcb7",
+      "handling": "preserved"
+    },
+    {
+      "path": "templates/evaluation_results_template.csv",
+      "sha256": "e470eddbc50f2614168b4691c2247c58001e391afd5d176ebc7e3026ade08bac",
+      "handling": "preserved"
+    },
+    {
+      "path": "templates/workflow_notes.md",
+      "sha256": "6ce404045dd6a2d92165adc4c70d4aed845dec8afaab0e0fe40eb8178a7f9458",
+      "handling": "preserved"
+    },
+    {
+      "path": "tests/test_data_integrity.py",
+      "sha256": "fe2b230a5f930e46eed35aa7b8249b65c1fdcd5e2626c5afacf00aac72c4f74f",
+      "handling": "preserved"
+    },
+    {
+      "path": "tests/test_mock_api.py",
+      "sha256": "a3435e90e97c049bff8ee8fdab9144c1dd6d87b09c32b9e0819ee0de9a56a9e4",
+      "handling": "preserved"
+    },
+    {
+      "path": "verify_setup.py",
+      "sha256": "a6da628917bc0a84a7e88f13c64f3a979522af3fcfe5a9280a0bf8d7a60382a8",
+      "handling": "extended"
+    }
+  ],
+  "procurement_decision_schema": {
+    "$defs": {
+      "EvidenceItem": {
+        "properties": {
+          "source": {
+            "description": "Tool/data source name",
+            "title": "Source",
+            "type": "string"
+          },
+          "finding": {
+            "description": "Concise factual finding",
+            "title": "Finding",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional record ID / policy section / endpoint",
+            "title": "Reference"
+          }
+        },
+        "required": [
+          "source",
+          "finding"
+        ],
+        "title": "EvidenceItem",
+        "type": "object"
+      },
+      "RunTelemetry": {
+        "properties": {
+          "llm_calls": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Llm Calls"
+          },
+          "tool_calls": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tool Calls"
+          },
+          "tool_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tool Names",
+            "type": "array"
+          }
+        },
+        "title": "RunTelemetry",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "request_id": {
+        "title": "Request Id",
+        "type": "string"
+      },
+      "recommendation": {
+        "description": "Short recommendation label or sentence",
+        "title": "Recommendation",
+        "type": "string"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/EvidenceItem"
+        },
+        "title": "Evidence",
+        "type": "array"
+      },
+      "required_approvals": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Required Approvals",
+        "type": "array"
+      },
+      "missing_information": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Missing Information",
+        "type": "array"
+      },
+      "risk_flags": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Risk Flags",
+        "type": "array"
+      },
+      "next_step": {
+        "title": "Next Step",
+        "type": "string"
+      },
+      "human_review_required": {
+        "default": true,
+        "title": "Human Review Required",
+        "type": "boolean"
+      },
+      "telemetry": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RunTelemetry"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "request_id",
+      "recommendation",
+      "next_step"
+    ],
+    "title": "ProcurementDecision",
+    "type": "object"
+  }
+}

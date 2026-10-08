@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from typing import Any, Callable
+from jsonschema import Draft202012Validator
 
 from src.telemetry import RunTelemetryCounter
 from src.tools import budget, catalog, policy, purchase_history, requester, vendor
@@ -141,6 +142,9 @@ class ToolRegistry:
             return self.cache[key]
         self.telemetry.record_tool_call(name)
         try:
+            errors = list(Draft202012Validator(spec.input_schema).iter_errors(args))
+            if errors:
+                raise TypeError(f"schema validation failed at {list(errors[0].path)} ({errors[0].validator})")
             if name == "run_policy_checks":
                 result = spec.fn(registry=self, **args)
             else:

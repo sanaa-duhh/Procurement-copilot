@@ -42,6 +42,7 @@ BLOCKING_FLAGS = {
     "budget_unverified",
     "vendor_risk_unavailable",
     "conflicting_vendor_evidence",
+    "evidence_unavailable",
 }
 
 FLAG_TAXONOMY = {
@@ -56,6 +57,7 @@ FLAG_TAXONOMY = {
     "vendor_risk_unavailable",
     "prompt_injection_detected",
     "missing_information",
+    "evidence_unavailable",
 }
 
 
@@ -134,7 +136,7 @@ def to_decimal(value: Any) -> Decimal | None:
         amount = Decimal(str(value))
     except (InvalidOperation, ValueError):
         return None
-    if amount.is_nan():
+    if not amount.is_finite():
         return None
     return amount
 
@@ -179,6 +181,8 @@ def data_access_profile(level: Any) -> dict[str, bool]:
 
 def integration_is_sensitive(integrations: list[Any] | None) -> list[str]:
     hits: list[str] = []
+    if not isinstance(integrations, list):
+        integrations = [integrations] if integrations else []
     for item in integrations or []:
         text = _norm(item)
         if any(k in text for k in _SECURITY_INTEGRATION_KEYWORDS):
@@ -284,8 +288,9 @@ def check_required_fields(request: dict[str, Any], requester: dict[str, Any] | N
         missing.append("annual cost (USD) or a reasonable annual estimate")
     users = request.get("user_count")
     try:
-        users_ok = users is not None and int(users) > 0
-    except (TypeError, ValueError):
+        count = to_decimal(users)
+        users_ok = not isinstance(users, bool) and count is not None and count > 0 and count == count.to_integral_value()
+    except (TypeError, ValueError, OverflowError):
         users_ok = False
     if not users_ok:
         missing.append("number of users / licenses")
@@ -295,7 +300,7 @@ def check_required_fields(request: dict[str, Any], requester: dict[str, Any] | N
         missing.append("business purpose (a usable justification)")
     if data_access_profile(request.get("data_access_level"))["unknown"]:
         missing.append("intended data-access level")
-    if "requested_integrations" not in request or request.get("requested_integrations") is None:
+    if not isinstance(request.get("requested_integrations"), list) or any(not isinstance(x, str) or not x.strip() for x in request.get("requested_integrations", [])):
         missing.append("required integrations (state 'none' if not applicable)")
     return missing
 
@@ -357,7 +362,8 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
 
     # -- Section 2: budget ---------------------------------------------------------
     budget = pack.budget or {}
-    if cost is not None and budget.get("found"):
+    available = to_decimal(budget.get("available_usd"))
+    if cost is not None and cost >= 0 and budget.get("found") and available is not None and budget.get("snapshot_arithmetic_consistent", True):
         available = to_decimal(budget.get("available_usd")) or Decimal(0)
         findings.budget_ok = cost <= available
         if findings.budget_ok:
@@ -366,7 +372,7 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
             flag("budget_insufficient")
             approvals.add("Finance")
             evidence("check_budget", f"${cost:,.0f} exceeds {budget['department']}'s available software budget of ${available:,.0f} by ${cost - available:,.0f}.", budget.get("reference"))
-    elif cost is not None:
+    elif cost is not None and cost >= 0:
         flag("budget_unverified")
         approvals.add("Finance")
         evidence("check_budget", f"No software budget line found for department '{budget.get('department') or 'unknown'}'; budget could not be verified.", "Policy §2 / §10")
@@ -410,18 +416,18 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
     def is_current(review_date: date | None) -> bool | None:
         if review_date is None:
             return None
-        return review_date + timedelta(days=SECURITY_ASSESSMENT_VALIDITY_DAYS) > ref_date
+        return review_date <= ref_date < review_date + timedelta(days=SECURITY_ASSESSMENT_VALIDITY_DAYS)
 
     registry_current = is_current(registry_date)
     api_current = is_current(api_date)
 
     # A registry row saying "approved" with a review older than 365 days is itself expired.
     effective_registry_status = registry_status
-    if registry_status == "approved" and registry_current is False:
-        effective_registry_status = "expired"
+    if registry_status == "approved" and registry_current is not True:
+        effective_registry_status = "expired" if registry_date and registry_date <= ref_date else "unknown"
     effective_api_status = api_status
-    if api_status == "approved" and api_current is False:
-        effective_api_status = "expired"
+    if api_status == "approved" and api_current is not True:
+        effective_api_status = "expired" if api_date and api_date <= ref_date else "unknown"
 
     if risk_missing:
         findings.vendor_status = "not_completed"
@@ -471,8 +477,10 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
         flag("vendor_review_expired")
     elif findings.vendor_unavailable:
         security_reasons.append("current vendor security assessment could not be verified (vendor-risk service unavailable)")
-    elif findings.vendor_status in {"not_completed", "unknown"}:
+    elif findings.vendor_status != "approved":
         security_reasons.append(f"vendor security assessment is {findings.vendor_status.replace('_', ' ')}")
+    elif effective_registry_status == "unknown":
+        security_reasons.append("registry assessment status/date cannot be confirmed as current")
     if findings.vendor_conflict:
         security_reasons.append("conflicting vendor evidence")
     if security_reasons:
@@ -519,6 +527,14 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
         if findings.overlap_kind and (profile["security_sensitive"] or profile["pii"] or profile["confidential"]):
             findings.notes.append("AI tool already in the catalog; the prior purchase does not authorise this data class (policy §8).")
 
+    # A failed catalog/history/registry lookup is not an empty successful lookup.
+    for source, result in (("search_software_catalog", pack.catalog),
+                           ("get_vendor_registry_record", pack.vendor_registry),
+                           ("get_purchase_history", pack.purchase_history)):
+        if result is None or "error" in result:
+            flag("evidence_unavailable")
+            evidence(source, "Required evidence could not be verified; Procurement must complete this check manually.", "Policy §10")
+
     # -- Assemble ----------------------------------------------------------------
     if missing:
         # Thresholds and reviews cannot be settled on an incomplete request; keep whatever is already
@@ -537,6 +553,8 @@ def _next_actions(f: RuleFindings) -> tuple[list[str], str]:
         return ["request_clarification"], "request_clarification"
     if f.vendor_unavailable or f.vendor_conflict:
         return ["escalate_manual_review", "route_for_reviews"], "escalate_manual_review"
+    if "evidence_unavailable" in f.risk_flags:
+        return ["escalate_manual_review"], "escalate_manual_review"
     if "budget_insufficient" in f.risk_flags or "budget_unverified" in f.risk_flags:
         allowed = ["budget_exception_required", "route_for_reviews", "evaluate_existing_tool_first"]
         return allowed, "budget_exception_required"

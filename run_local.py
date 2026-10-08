@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import os
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -25,6 +26,14 @@ UI_PORT = int(os.getenv("UI_PORT", "8501"))
 
 def start(cmd: list[str]) -> subprocess.Popen:
     return subprocess.Popen(cmd, cwd=ROOT)
+
+
+def ensure_port_available(port: int) -> None:
+    with socket.socket() as probe:
+        try:
+            probe.bind(("127.0.0.1", port))
+        except OSError as exc:
+            raise RuntimeError(f"Port {port} is already in use. Choose --api-port and/or --ui-port; existing services are left running.") from exc
 
 
 def wait_for_api(url: str, proc: subprocess.Popen, timeout_seconds: float = 15.0) -> None:
@@ -49,17 +58,27 @@ def _handle_termination(signum: int, frame: object) -> None:
 
 
 def credential_notice() -> None:
-    provider = os.getenv("LLM_PROVIDER", "anthropic").lower()
+    provider = os.getenv("LLM_PROVIDER", "openai").lower()
     if provider == "mock":
         print("LLM_PROVIDER=mock: the copilot runs on the scripted stand-in model (no credentials needed).")
-    elif provider == "anthropic" and not (os.getenv("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN")):
-        print("Note: ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add it, or set LLM_PROVIDER=mock to try the UI offline.")
+    elif not os.getenv("OPENAI_API_KEY"):
+        print("Note: OPENAI_API_KEY is not set in the shell or .env. Use --demo for the offline fixture.")
 
 
 def main() -> None:
+    global API_PORT, UI_PORT
     parser = argparse.ArgumentParser()
     parser.add_argument("--no-ui", action="store_true", help="start only the vendor-risk API")
+    parser.add_argument("--demo", action="store_true", help="offline scripted model; no API key needed")
+    parser.add_argument("--api-port", type=int, default=API_PORT)
+    parser.add_argument("--ui-port", type=int, default=UI_PORT)
     args = parser.parse_args()
+    API_PORT, UI_PORT = args.api_port, args.ui_port
+    ensure_port_available(API_PORT)
+    if not args.no_ui:
+        ensure_port_available(UI_PORT)
+    if args.demo:
+        os.environ["LLM_PROVIDER"] = "mock"
     signal.signal(signal.SIGTERM, _handle_termination)
     procs: list[subprocess.Popen] = []
     try:
@@ -67,6 +86,7 @@ def main() -> None:
         api_proc = start([sys.executable, "-m", "uvicorn", "mock_api.app:app", "--host", API_HOST, "--port", str(API_PORT), "--log-level", "warning"])
         procs.append(api_proc)
         wait_for_api(f"http://{API_HOST}:{API_PORT}/health", api_proc)
+        os.environ["VENDOR_RISK_BASE_URL"] = f"http://{API_HOST}:{API_PORT}"
         print("Vendor-risk API is ready.")
         credential_notice()
 
@@ -77,7 +97,7 @@ def main() -> None:
                 print("Streamlit is not installed (uv sync / pip install -r requirements.txt). API keeps running; Ctrl+C to stop.")
             else:
                 print(f"Starting copilot UI on http://127.0.0.1:{UI_PORT} ...")
-                procs.append(start([sys.executable, "-m", "streamlit", "run", "app.py", "--server.port", str(UI_PORT), "--server.headless", "true"]))
+                procs.append(start([sys.executable, "-m", "streamlit", "run", "app.py", "--server.port", str(UI_PORT), "--server.headless", "true", "--server.address", "127.0.0.1"]))
 
         while True:
             time.sleep(1)

@@ -1,19 +1,25 @@
 # Submission checklist
 
-- [x] `uv run python verify_setup.py` passes.
-- [x] The product processes a request end-to-end (UI and adapter).
-- [x] Architecture A is a working single-agent baseline (`src/agents/single.py`).
-- [x] Architecture B is a lightweight staged / 2-agent variant (`src/agents/staged.py`).
-- [x] At least 3 tools are used; all 7 are deterministic, and `run_policy_checks` is the policy as code.
-- [x] Recommendations are returned in the `ProcurementDecision` structure (`CopilotDecision` extends it).
-- [x] Important evidence is visible to the user (evidence panel, tool trace, deterministic findings).
-- [x] Missing / conflicting / unavailable evidence is handled without fabrication.
-- [x] Human approval is preserved for sensitive decisions; `human_review_required` is always true.
-- [x] Prompt injection inside business data does not override system behaviour (scan + prompt + guardrail).
-- [x] Date-based checks use the policy's reference date (parsed from the policy file).
-- [x] The same evaluation cases were run on both architectures (`evals/run_evals.py`).
-- [x] Latency and LLM / tool-call counts are reported (telemetry in every decision; `evals/results/`).
-- [ ] The decision memo is ≤ 500 words and supported by evaluation evidence (`docs/architecture_decision.md`) — written after the evaluation run.
-- [x] Setup instructions work from a clean environment (`uv sync` or `pip install -r requirements.txt`).
-- [x] The provider SDK (`anthropic`) is in `requirements.txt` and `pyproject.toml`.
-- [x] `.env`, API keys and other secrets are not committed; `.env.example` is provided.
+## Verified locally
+
+- [x] Both architectures run through the starter-compatible adapter.
+- [x] UI includes request details, verified evidence, recommendation and human action.
+- [x] Seven deterministic tools have locally validated input schemas.
+- [x] Policy checks enforce thresholds, budget, vendor dates/conflicts and required reviews.
+- [x] Structured model outputs are locally validated; tool loops are bounded.
+- [x] Missing information, injected instructions and unavailable evidence are exercised in tests.
+- [x] Human decisions reference the exact request and analysis run.
+- [x] Tests and scripted comparison run without model credentials or a listening API.
+- [x] One-command demo, locked dependencies, CI and .env.example are provided.
+- [x] Architecture diagrams, assumptions, limitations and reviewer walkthrough are documented.
+
+## Required before submitting the URL
+
+- [x] Verify OpenAI model access using the existing shell credential.
+- [ ] Run both architectures on the same cases; retain complete results and failures.
+- [ ] Inspect raw drafts, grounding, latency/calls/tokens and architecture disagreements.
+- [ ] Replace the provisional memo with a results-backed ship decision (≤500 words).
+- [ ] Fill the README comparison from the real artifacts and remove pending notices.
+- [ ] Owner: create/push the public GitHub repository and check the URL while signed out.
+- [ ] Confirm no credentials or private runtime review logs are tracked.
+- [ ] Submit the public repository URL before 8 October, 11:59 PM.

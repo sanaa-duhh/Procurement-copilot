@@ -1,7 +1,7 @@
 """Model-provider adapter.
 
 One small interface (`LLMClient.create`) so the agents never touch an SDK directly.
-`AnthropicClient` is the real provider; `MockClient` is a scripted stand-in used by
+`OpenAIClient` is the only live provider; `MockClient` is a scripted stand-in used by
 the test-suite and by `LLM_PROVIDER=mock` so the product runs without credentials.
 Mock runs are never reported as evaluation results.
 """
@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-DEFAULT_MODEL = "claude-opus-5"
+DEFAULT_MODEL = "gpt-6-astra"
 
 
 @dataclass
@@ -31,10 +31,19 @@ class LLMTurn:
     assistant_content: Any          # passed back verbatim as the assistant turn
     input_tokens: int = 0
     output_tokens: int = 0
+    rate_limit_retries: int = 0
+    rate_limit_wait_ms: float = 0
+    response_id: str | None = None
+    response_model: str | None = None
 
 
 class LLMError(RuntimeError):
     """The model could not produce a usable turn (auth, refusal, truncation, network)."""
+
+    def __init__(self, message: str, *, rate_limit_retries=0, rate_limit_wait_ms=0):
+        super().__init__(message)
+        self.rate_limit_retries = rate_limit_retries
+        self.rate_limit_wait_ms = rate_limit_wait_ms
 
 
 class LLMClient(Protocol):
@@ -42,91 +51,6 @@ class LLMClient(Protocol):
 
     def create(self, *, system: str, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None,
                output_schema: dict[str, Any] | None, max_tokens: int) -> LLMTurn: ...
-
-
-# --------------------------------------------------------------------------
-# Anthropic
-# --------------------------------------------------------------------------
-
-class AnthropicClient:
-    def __init__(self, model: str | None = None, effort: str | None = None) -> None:
-        import anthropic  # imported lazily so the mock path has no SDK dependency
-
-        self._anthropic = anthropic
-        self.model = model or os.getenv("MODEL_NAME") or DEFAULT_MODEL
-        self.effort = effort if effort is not None else os.getenv("LLM_EFFORT", "medium")
-        self._client = anthropic.Anthropic(timeout=180.0, max_retries=2)
-        self._supports: dict[str, bool] = {"effort": bool(self.effort), "format": True, "strict": True}
-
-    def create(self, *, system, messages, tools, output_schema, max_tokens=8000) -> LLMTurn:
-        attempts = 0
-        while True:
-            attempts += 1
-            kwargs: dict[str, Any] = {
-                "model": self.model,
-                "max_tokens": max_tokens,
-                "system": system,
-                "messages": messages,
-            }
-            output_config: dict[str, Any] = {}
-            if self._supports["effort"] and self.effort:
-                output_config["effort"] = self.effort
-            if output_schema and self._supports["format"]:
-                output_config["format"] = {"type": "json_schema", "schema": output_schema}
-            if output_config:
-                kwargs["output_config"] = output_config
-            if tools:
-                kwargs["tools"] = tools if self._supports["strict"] else [{k: v for k, v in t.items() if k != "strict"} for t in tools]
-            try:
-                response = self._client.messages.create(**kwargs)
-                break
-            except self._anthropic.BadRequestError as exc:
-                # Feature negotiation: older models reject effort / structured output / strict tools.
-                message = str(exc).lower()
-                if attempts < 4 and "effort" in message and self._supports["effort"]:
-                    self._supports["effort"] = False
-                    continue
-                if attempts < 4 and ("output_config" in message or "format" in message) and self._supports["format"]:
-                    self._supports["format"] = False
-                    continue
-                if attempts < 4 and "strict" in message and self._supports["strict"]:
-                    self._supports["strict"] = False
-                    continue
-                raise LLMError(f"bad request: {exc.message}") from exc
-            except self._anthropic.AuthenticationError as exc:
-                raise LLMError("authentication failed: set ANTHROPIC_API_KEY in .env") from exc
-            except self._anthropic.RateLimitError as exc:
-                raise LLMError(f"rate limited: {exc.message}") from exc
-            except self._anthropic.APIStatusError as exc:
-                raise LLMError(f"API error {exc.status_code}: {exc.message}") from exc
-            except self._anthropic.APIConnectionError as exc:
-                raise LLMError(f"connection error: {exc}") from exc
-            except TypeError as exc:
-                # The SDK raises TypeError when no credential source can be resolved.
-                if "authentication" in str(exc).lower():
-                    raise LLMError("no model credentials found: set ANTHROPIC_API_KEY in .env (see .env.example)") from exc
-                raise
-
-        if response.stop_reason == "refusal":
-            raise LLMError("model refused the request")
-        if response.stop_reason == "max_tokens":
-            raise LLMError("response truncated at max_tokens")
-        text_parts: list[str] = []
-        tool_calls: list[ToolCall] = []
-        for block in response.content:
-            if block.type == "text":
-                text_parts.append(block.text)
-            elif block.type == "tool_use":
-                raw = block.input
-                tool_calls.append(ToolCall(id=block.id, name=block.name, input=raw if isinstance(raw, dict) else json.loads(json.dumps(raw))))
-        return LLMTurn(
-            text="\n".join(text_parts).strip(),
-            tool_calls=tool_calls,
-            stop_reason=response.stop_reason or "end_turn",
-            assistant_content=response.content,
-            input_tokens=response.usage.input_tokens,
-            output_tokens=response.usage.output_tokens,
-        )
 
 
 # --------------------------------------------------------------------------
@@ -257,12 +181,17 @@ def _scripted_tool_calls(request: dict[str, Any], tools: list[dict[str, Any]]) -
 # --------------------------------------------------------------------------
 
 def get_llm_client() -> LLMClient:
-    provider = os.getenv("LLM_PROVIDER", "anthropic").strip().lower()
+    provider = os.getenv("LLM_PROVIDER", "openai").strip().lower()
     if provider == "mock":
         return MockClient()
-    if provider == "anthropic":
-        return AnthropicClient()
-    raise LLMError(f"unsupported LLM_PROVIDER '{provider}' (use 'anthropic' or 'mock')")
+    if provider == "openai":
+        from src.openai_client import OpenAIClient
+        return OpenAIClient()
+    raise LLMError(f"unsupported LLM_PROVIDER '{provider}' (use 'openai' or the offline 'mock' fixture)")
+
+
+def configured_model(provider: str) -> str:
+    return "scripted mock" if provider == "mock" else os.getenv("MODEL_NAME") or DEFAULT_MODEL
 
 
 def extract_json(text: str) -> dict[str, Any] | None:
