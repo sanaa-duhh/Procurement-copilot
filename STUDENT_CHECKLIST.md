@@ -16,10 +16,10 @@
 ## Required before submitting the URL
 
 - [x] Verify OpenAI model access using the existing shell credential.
-- [ ] Run both architectures on the same cases; retain complete results and failures.
-- [ ] Inspect raw drafts, grounding, latency/calls/tokens and architecture disagreements.
-- [ ] Replace the provisional memo with a results-backed ship decision (≤500 words).
-- [ ] Fill the README comparison from the real artifacts and remove pending notices.
+- [x] Run both architectures on the same cases; retain complete results and failures.
+- [x] Inspect raw drafts, grounding, latency/calls/tokens and architecture disagreements.
+- [x] Replace the provisional memo with a results-backed ship decision (≤500 words).
+- [x] Fill the README comparison from the real artifacts and remove pending notices.
 - [ ] Owner: create/push the public GitHub repository and check the URL while signed out.
-- [ ] Confirm no credentials or private runtime review logs are tracked.
-- [ ] Submit the public repository URL before 8 October, 11:59 PM.
+- [x] Confirm no credentials or private runtime review logs are tracked.
+- [ ] Submit the public repository URL through the [assignment form](https://forms.gle/ab9DrohuNQWukXCD9) before 8 October, 11:59 PM.

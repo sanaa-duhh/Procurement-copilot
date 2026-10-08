@@ -129,7 +129,7 @@ plus the raw tool outputs as a JSON list. Both architectures emit the same final
 
 - No automatic approval, purchase order creation or budget mutation anywhere in the code paths.
 - No retrieval over policy text; the policy is short and is passed whole to the model, and every rule that matters is also in code.
-- No third agent, planner or critic loop. The live comparison will determine whether the second role earns its cost.
+- No third agent, planner or critic loop. The live comparison supports shipping the single agent; the second role remains available for experiments.
 - No fuzzy matching of employees or vendors beyond case-insensitive equality; an unknown ID is reported as missing information, not guessed.
 
 ## Provider and experiment boundaries

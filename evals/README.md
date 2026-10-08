@@ -1,6 +1,6 @@
 # Reproducing the comparison
 
-The full runner evaluates **both architectures on the same 18 labelled cases**. It never sends expected answers to the model. The starter's six public cases and runner remain available separately.
+The full runner evaluates **both architectures on the same 18 labelled cases**. It never sends expected answers to the model. The starter's six public cases and runner remain available separately. Start with the [saved experiment index](results/README.md), [complete comparison](results/openai-comparison-20261008/summary.md) and [case analysis](results/openai-comparison-20261008/case_analysis.md).
 
 ## Commands
 

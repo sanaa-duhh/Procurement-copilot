@@ -24,7 +24,7 @@ def test_ui_renders_request_evidence_and_recommendation():
     assert "Approvals required" in body
     assert "Next step" in body
     assert any("Evidence" in s.value for s in at.subheader)
-    assert len(at.dataframe) == 1               # evidence table rendered
+    assert any("Annual amount" in e.label for e in at.expander)
 
 
 def test_ui_human_action_requires_reviewer_name():
@@ -38,18 +38,18 @@ def test_ui_human_action_requires_reviewer_name():
 def test_changing_architecture_hides_old_decision():
     at = AppTest.from_file(APP, default_timeout=60).run()
     at.sidebar.button[0].click().run()
-    assert len(at.dataframe) == 1
+    assert any("Annual amount" in e.label for e in at.expander)
     at.sidebar.radio[0].set_value("staged").run()
     assert not at.exception
-    assert len(at.dataframe) == 0
+    assert not any("Annual amount" in e.label for e in at.expander)
 
 
 def test_editing_same_new_request_id_hides_old_decision():
     at = AppTest.from_file(APP, default_timeout=60).run()
     at.sidebar.radio[1].set_value("New request").run()
     [b for b in at.sidebar.button if b.label == "Run analysis"][0].click().run()
-    assert len(at.dataframe) == 1
+    assert any("Request is not ready" in e.label for e in at.expander)
     [t for t in at.sidebar.text_input if t.label == "Product name"][0].set_value("Changed product")
     [b for b in at.sidebar.button if b.label == "Use this request"][0].click().run()
     assert not at.exception
-    assert len(at.dataframe) == 0
+    assert not any("Request is not ready" in e.label for e in at.expander)

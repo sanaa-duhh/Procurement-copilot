@@ -367,11 +367,11 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
         available = to_decimal(budget.get("available_usd")) or Decimal(0)
         findings.budget_ok = cost <= available
         if findings.budget_ok:
-            evidence("check_budget", f"${cost:,.0f} is within {budget['department']}'s available software budget of ${available:,.0f}.", budget.get("reference"))
+            evidence("check_budget", f"${cost:,.2f} is within {budget['department']}'s available software budget of ${available:,.2f}.", budget.get("reference"))
         else:
             flag("budget_insufficient")
             approvals.add("Finance")
-            evidence("check_budget", f"${cost:,.0f} exceeds {budget['department']}'s available software budget of ${available:,.0f} by ${cost - available:,.0f}.", budget.get("reference"))
+            evidence("check_budget", f"${cost:,.2f} exceeds {budget['department']}'s available software budget of ${available:,.2f} by ${cost - available:,.2f}.", budget.get("reference"))
     elif cost is not None and cost >= 0:
         flag("budget_unverified")
         approvals.add("Finance")
@@ -509,7 +509,7 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
     legal_reasons: list[str] = []
     vendor_is_new = (not registry_found) or _norm(registry.get("procurement_status")) != "approved"
     if vendor_is_new and cost is not None and cost >= LEGAL_NEW_VENDOR_SPEND_THRESHOLD:
-        legal_reasons.append(f"new vendor with annual spend ${cost:,.0f} (>= $10,000)")
+        legal_reasons.append(f"new vendor with annual spend ${cost:,.2f} (>= $10,000)")
     if registry_found and _norm(registry.get("legal_terms_status")) not in {"approved", "standard"}:
         legal_reasons.append(f"legal terms status is '{registry.get('legal_terms_status')}'")
     elif not registry_found:

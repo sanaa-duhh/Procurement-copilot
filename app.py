@@ -136,8 +136,12 @@ with col_evidence:
     if decision is None:
         st.caption("Run the analysis to gather evidence from the tools.")
     else:
-        rows = [{"source": e.source, "finding": e.finding, "reference": e.reference or ""} for e in decision.evidence]
-        st.dataframe(rows, width="stretch", hide_index=True, height=min(60 + 38 * len(rows), 520))
+        for item in decision.evidence:
+            label = item.finding if len(item.finding) <= 90 else item.finding[:87] + "…"
+            material_uncertainty = any(term in item.finding.lower() for term in ("disagree", "could not verify", "could not be verified", "missing:"))
+            with st.expander(label.replace("$", r"\$"), expanded=material_uncertainty):
+                st.write(item.finding.replace("$", r"\$"))
+                st.caption(f"Source: {item.source} · Reference: {item.reference or 'not supplied'}")
         trace = decision.trace
         with st.expander(f"Tool calls ({decision.telemetry.tool_calls} executed)"):
             for entry in trace.get("tool_log", []):
@@ -173,6 +177,11 @@ with col_decision:
         if decision.missing_information:
             st.markdown("**Missing information**")
             st.markdown("\n".join(f"- {m}" for m in decision.missing_information))
+        if not decision.missing_information and decision.trace.get("llm_missing_information"):
+            with st.expander("Reviewer follow-up questions"):
+                st.caption("Model-suggested questions for human verification; these are separate from required intake fields.")
+                for question in decision.trace["llm_missing_information"]:
+                    st.write("• " + question.replace("$", r"\$"))
         st.markdown("**Next step**")
         st.info(decision.next_step)
         if decision.telemetry.guardrail_corrections:

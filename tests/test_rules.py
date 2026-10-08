@@ -79,6 +79,26 @@ def test_budget_shortfall_flags_and_adds_finance():
     assert f.preferred_next_action == "budget_exception_required"
 
 
+@pytest.mark.parametrize("available, shortfall", [(2000, False), (1000, True)])
+def test_cent_above_threshold_remains_visible_in_budget_evidence(available, shortfall):
+    pack = _pack(request=_request(annual_cost_usd="1000.01"))
+    pack.budget["available_usd"] = available
+    findings = evaluate(pack)
+    budget_fact = next(e.finding for e in findings.evidence if e.source == "check_budget")
+    assert "$1,000.01" in budget_fact
+    assert ("budget_insufficient" in findings.risk_flags) is shortfall
+    if shortfall:
+        assert "by $0.01" in budget_fact
+    assert {"Department Head", "Procurement"} <= set(findings.required_approvals)
+
+
+def test_new_vendor_legal_evidence_preserves_cents():
+    findings = evaluate(_pack(request=_request(annual_cost_usd="10000.01"), vendor_registry={"found": False}))
+    legal_fact = next(e.finding for e in findings.evidence if "new vendor with annual spend" in e.finding)
+    assert "$10,000.01" in legal_fact
+    assert "Legal" in findings.required_approvals
+
+
 def test_unknown_department_budget_is_unverified_not_assumed():
     f = evaluate(_pack(budget={"found": False, "department": "Go To Market"}))
     assert "budget_unverified" in f.risk_flags

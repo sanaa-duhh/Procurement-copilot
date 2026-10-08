@@ -39,3 +39,12 @@ OpenAI is the final provider choice. Both architectures use the same Responses A
 ## Starter-pack provenance
 
 The user-supplied pack was compared file-by-file against the root implementation and the initial commit. All nine data files, mock API files, public cases and runner, data-access helpers, brief and integrity tests match byte-for-byte. The original ProcurementDecision JSON schema also matches. Optional templates and sample output are retained at their original root paths; completed documents are in docs/. The hash manifest and compatibility tests make this check reproducible after cloning.
+
+
+## Findings from the live comparison
+
+The 36-trial OpenAI comparison favoured the single agent: 18/18 final and raw checks, versus staged's 17/18 final and 14/18 raw checks. The staged final miss retains required reviews but disagrees with the label about which step should happen first. Labels and completed trials remain unchanged; this qualification is part of the architecture decision.
+
+Reviewing SYN-13 exposed rounded money in the policy engine's narrative evidence. Exact arithmetic and approval tiers were already correct, but a one-cent shortfall could be displayed as “by $0.” Three regression checks reproduced the problem before the fix. Three formatting expressions now retain two decimal places. A separate live threshold experiment checks the updated source; the main comparison still measures its original fingerprint.
+
+The UI audit also found clipped evidence and hidden references. Findings now expand to show full text and provenance; conflicts open by default. Model-proposed follow-up questions remain separate from policy-required intake fields and are visible to the human reviewer. The README screenshot is a labelled scripted demo, not live model evidence.

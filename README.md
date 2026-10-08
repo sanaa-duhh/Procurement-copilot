@@ -4,7 +4,11 @@ A procurement reviewer should be able to answer three questions: **What should h
 
 Built for FDE Assessment 3 by Sanaa. [Reviewer walkthrough](docs/review_guide.md) · [Architecture](docs/architecture.md) · [Evaluation](evals/README.md) · [Decision memo](docs/architecture_decision.md)
 
-> **Submission status:** local reliability checks and the scripted evaluation pass. The real OpenAI comparison, evidence-backed ship decision, and public repository publication are still pending. Scripted results are not model-quality results.
+![Conflicting vendor evidence produces a manual-review recommendation](docs/images/demo-conflicting-vendor.png)
+
+*Scripted demo: the registry and risk service disagree. The evidence panel exposes both records and the policy reference. Live model results are reported separately below.*
+
+> **Verified locally:** 112 tests pass; the full OpenAI comparison is saved. **Ship choice: single agent.** Public repository creation and URL submission are the owner’s remaining steps.
 
 ## Try it
 
@@ -113,7 +117,27 @@ uv run python evals/run_evals.py --provider openai --repeats 1
 The API is billed to the account owning `OPENAI_API_KEY`. Each run records tokens and accepts explicit price inputs for a reproducible estimate. Provider failures and time spent waiting for rate limits remain visible in the report.
 
 <!-- RESULTS:BEGIN -->
-**Real model results pending.** The scripted model mirrors the policy engine and cannot establish which architecture to ship. The [decision memo](docs/architecture_decision.md) records the decision criteria until live evidence is available.
+**Ship the single agent for supervised use.** In the [complete OpenAI experiment](evals/results/openai-comparison-20261008/summary.md), 18 cases were run once per architecture with `gpt-6-astra`, medium reasoning, paired order and seed 42.
+
+| Measured result | Single | Staged |
+|---|---:|---:|
+| Final end-to-end checks passed | **18/18** | 17/18 |
+| Raw-draft checks passed | **18/18** | 14/18 |
+| Required approvals and human review preserved | 18/18 | 18/18 |
+| Draft evidence exactly supported | 100% | 100% |
+| Field corrections across all requests | **0** | 14 |
+| Mean latency | **22.5 s** | 34.8 s |
+| Observed p95 latency | 25.9 s | 38.8 s |
+| Mean model / tool calls | 3.94 / 7.83 | 4.94 / 7.78 |
+| Mean input / output tokens | 11,179 / 803 | 14,614 / 1,512 |
+| Indicative token cost per request | **$0.152** | $0.222 |
+| Provider failures / rate-limit retries | 0 / 0 | 0 / 0 |
+
+Single used 35% less time and approximately 31% less estimated token cost. The staged final failure is a strict sequencing disagreement on **SYN-17**, with Security and Privacy approvals retained. Its other raw failures concern follow-up questions placed in the missing-information field. These are narrower findings than a safety failure; see the [case analysis](evals/results/openai-comparison-20261008/case_analysis.md) and [decision memo](docs/architecture_decision.md).
+
+Prices supplied to the runner were $10 per million input tokens and $50 per million output tokens, from the [OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-6-astra). The estimate excludes cache discounts and is not an invoice. One repeat on a small, mostly policy-driven case set does not establish production reliability or a statistically significant quality difference.
+
+The comparison measures source commit `0de3dc7`. Reviewing it exposed rounded budget prose; the current code preserves cents, verified separately in the [precision follow-up](evals/results/openai-precision-live-20261008/summary.md). Original trials and scores are unchanged. The [experiment index](evals/results/README.md) distinguishes the main comparison, follow-up and integration pilots.
 <!-- RESULTS:END -->
 
 ## Assumptions and limits

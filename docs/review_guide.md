@@ -8,9 +8,9 @@ Start with the README's one-command demo. A request remains on the left, retriev
 | End-to-end product — 20% | One-command app + vendor API; starter adapter; review record | `run_local.py`, `src/solution.py`, pipeline tests |
 | Agent + tool design — 20% | Single agent; analyst/reviewer; 7 typed tools | `docs/architecture.md`, `src/agents/`, `src/tools/` |
 | Reliability + human controls — 15% | Code policy floor, verified facts, bounded loops, schema validation, explicit fallback | `tests/test_reliability.py`, `tests/test_guardrails.py`, `src/audit.py` |
-| Evaluation + comparison — 20% | Same cases, raw/final scores, failures retained, traceable run metadata | `evals/README.md`; **real results pending** |
+| Evaluation + comparison — 20% | Same cases, raw/final scores, failures retained, traceable run metadata | [Complete OpenAI comparison](../evals/results/openai-comparison-20261008/summary.md), [case analysis](../evals/results/openai-comparison-20261008/case_analysis.md) |
 | Engineering + communication — 10% | Locked dependencies, isolated tests, CI, assumptions and limitations | `uv.lock`, `.github/workflows/ci.yml`, README |
-| Decision memo, ≤500 words | Criteria documented; evidence-backed conclusion still pending | `docs/architecture_decision.md` |
+| Decision memo, ≤500 words | 392-word memo: single agent, supported by measured quality, latency and cost | `docs/architecture_decision.md` |
 | Public GitHub URL | Repository prepared locally; publication still pending | Owner will create the remote and push; local commits do not need GitHub login |
 
 ## Inspect the difficult cases
@@ -21,12 +21,12 @@ Start with the README's one-command demo. A request remains on the left, retriev
 - **REQ-1005:** inspect the budget shortfall and all three specialist reviews.
 - **REQ-1008:** a thin reason for another company-wide task tracker. This is the current case where model judgement over overlap is assessed most directly.
 
-The evidence table is code-authored. Model assessment is labelled and can be inspected separately. Expanding the tool trace shows what each role actually retrieved, including cached calls. A review records the decision's run ID and request fingerprint; it does not send an email, route a ticket or approve a purchase.
+The evidence panel is code-authored. Expand a finding to read its full text and source reference; conflicts and unavailable checks open automatically. Model assessment is labelled and can be inspected separately. Expanding the tool trace shows what each role actually retrieved, including cached calls. A review records the decision's run ID and request fingerprint; it does not send an email, route a ticket or approve a purchase.
 
-## Before submission
+## Verification and submission
 
-1. Run the real provider on both architectures with the same cases and configuration; preserve failures.
-2. Review the raw drafts and publish the complete comparison artifacts.
-3. Replace the provisional memo with the evidence-backed decision; keep it under 500 words.
-4. Update the README results and submission checklist.
-5. Owner creates a public GitHub repository and pushes the local history, then verifies its URL from a signed-out browser.
+The local suite passes 112 tests. The complete live comparison records 18/18 single-agent and 17/18 staged final checks, with raw drafts and all failures preserved. Both pass the six original public cases. The memo recommends the single agent; the case analysis explains the staged sequencing disagreement and the difference between missing intake fields and reviewer questions.
+
+The main experiment measures source `0de3dc7`. The only subsequent agent-code change is three money-formatting expressions in `src/rules.py`; calculations, prompts, actions and labels are unchanged. Separate threshold trials verify that precision fix. UI changes expose long findings and optional reviewer questions without changing the evaluated decision contract.
+
+The owner creates a public GitHub repository and pushes the local history, verifies the URL from a signed-out browser, then submits it through the assignment form linked in `STUDENT_CHECKLIST.md`. GitHub CLI authentication is not required to maintain this local history.

@@ -31,12 +31,14 @@ On 8 October 2026, the supplied pack was compared byte-for-byte with the working
 
 The starter README expressly allows refactoring while retaining the adapter, permits replacing the UI, and does not require a particular provider/framework. Its templates are examples; the completed memo and workflow documentation belong in `docs/`.
 
+The separately supplied final `FDE_Assessment_3.pdf` additionally specifies a **public GitHub URL submitted through the Google Form** and lists the required README topics. The reviewer guide and submission checklist follow those final submission instructions; the starter's shorter brief is preserved unchanged for provenance.
+
 ## Reproduce the checks
 
 ```bash
 uv run pytest tests/test_starter_compatibility.py tests/test_data_integrity.py tests/test_mock_api.py -q
 ```
 
-These checks use no model credentials or listening service. They verify provenance and compatibility, not model quality. The live comparison remains a separate requirement. A one-case OpenAI pilot has verified both provider integrations; it is not the final comparison.
+These checks use no model credentials or listening service. They verify provenance and compatibility, not model quality. The separate [complete OpenAI comparison](../evals/results/openai-comparison-20261008/summary.md) evaluates model behaviour; integration pilots are retained separately.
 
 There is no scaffold-related reason to restart: the required source material and interfaces are present. The engineering work is to test and complete this implementation, then defend its architecture choice with real evaluation evidence.
