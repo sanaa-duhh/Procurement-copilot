@@ -1,54 +1,53 @@
 # Procurement Request Copilot
 
-A procurement reviewer should be able to answer three questions: **What should happen next? What evidence supports it? Who must decide?** This app gathers the records, applies the policy, and produces a recommendation with a human handoff.
+An internal copilot for software purchase requests. It gathers the evidence Procurement needs, applies the procurement policy in code, and recommends the next action. People make every approval.
 
-Built for FDE Assessment 3 by Sanaa. [Requirement coverage](#assessment-requirement-coverage) · [Engineering decisions](#engineering-decisions-and-tradeoffs) · [Reviewer walkthrough](docs/review_guide.md) · [Architecture](docs/architecture.md) · [Evaluation](evals/README.md) · [Decision memo](docs/architecture_decision.md)
+Built by Sanaa for FDE Assessment 3. Deeper detail: [architecture](docs/architecture.md) · [evaluation method](evals/README.md) · [decision memo](docs/architecture_decision.md) · [build notes](docs/workflow_notes.md)
 
-![Procurement workspace with a deep teal theme](docs/images/review-workspace.png)
+![Review workspace](docs/images/review-workspace.png)
 
-*Scripted demo workspace. The Light mode switch changes to a [soft mint theme](docs/images/review-workspace-light.png). Both appearances use the same review workflow.*
+> **Ship decision: the single agent.** On the same 18 cases it passed 18/18 against the staged variant's 17/18, with 35% lower latency and about 31% lower token cost.
 
-![Saved architecture comparison inside the app](docs/images/architecture-comparison.png)
+## Run it
 
-*The benchmark view reads the saved live experiment. The separate **This request** view compares the request currently selected in the workspace. Browsing saved results makes no model calls.*
-
-[View a request-specific comparison](docs/images/request-comparison-light.png) — a labelled scripted demonstration of the two-result workflow, separate from the live benchmark above.
-
-> **Ship choice: single agent.** It matched or beat the staged variant on all 18 cases with 35% lower latency and about 31% lower token cost. 132 offline tests run in CI; the full OpenAI comparison is saved under [`evals/results/`](evals/results/README.md).
-
-## Try it
-
-Install Python 3.12 and [uv](https://docs.astral.sh/uv/), then from this directory:
+Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv run python run_local.py --demo
 ```
 
-Open **http://127.0.0.1:8501**. This command starts both the UI and the vendor-risk API. Demo mode uses a clearly labelled scripted model and needs no credentials. Ctrl+C stops both processes. If a port is occupied, choose explicit alternatives: `uv run python run_local.py --demo --api-port 8002 --ui-port 8502`.
+Open http://127.0.0.1:8501. One command starts both the UI and the vendor-risk API. `--demo` uses a clearly labelled scripted model and needs no credentials. If a port is taken, add `--api-port 8002 --ui-port 8502`.
 
-For real model analysis:
+For live analysis, put `OPENAI_API_KEY` in your shell or in `.env` (copy `.env.example`), then run `uv run python run_local.py`. The model is `gpt-6-astra` at medium reasoning effort, through the OpenAI Responses API.
 
 ```bash
-cp .env.example .env   # only if .env does not already exist
-# OPENAI_API_KEY can stay in your shell; .env is optional for credentials.
-uv run python run_local.py
+uv run pytest -q                                          # 130 offline tests, no key or server needed
+uv run python verify_setup.py                             # preflight checks
+uv run python evals/run_evals.py --provider openai        # full comparison, both architectures
+uv run python evals/run_public_evals.py --architecture single   # starter harness
 ```
 
-The live provider is **OpenAI only**, using `gpt-6-astra` at medium reasoning effort through the Responses API. The existing shell `OPENAI_API_KEY` takes precedence over `.env`. No provider fallback is configured. All decisions remain advisory.
+GitHub Actions runs the offline checks on every push.
 
-## A three-minute walkthrough
+## Product workflow
 
-1. Run **REQ-1010**: a low-value training service. Check the budget evidence and Manager approval.
-2. Run **REQ-1005**: the Sales budget is insufficient and customer PII adds Security, Privacy and Legal reviews.
-3. Run **REQ-1007**: the registry says approved while the risk service says expired. Both sources are shown; a human must resolve the conflict.
-4. Run **REQ-1006**: missing fields and an instruction embedded in the justification. It must request clarification.
-5. Run **REQ-1009**: a deliberate vendor API outage. The app exposes the failed check and escalates.
-6. Open **Human review**, enter a name and save a review. Download the readable handoff or decision JSON. The local record includes the exact decision, run ID and request fingerprint; sending it to approvers is a human step.
-7. Open **Compare architectures → This request**. The existing result is reused; click the comparison button to run only the missing architecture. Compare actions, approvals, risk flags, evidence, corrections, latency and token usage. A complete pair can be downloaded.
-8. Open **18-case benchmark** to inspect the measured ship decision and the SYN-17 disagreement. This fixed experiment is separate from exploratory requests; browsing its scores, CSV and memo makes no calls.
-9. Return to a sample and open **Saved analyses → View saved analysis**, or use **Saved request** to reopen a custom request after restarting the app. **Analyse again** produces a new run and keeps the original.
+A reviewer picks a sample request or types a new one, chooses an architecture and clicks **Analyse request**. The decision comes back with the six required fields: **recommendation, evidence, approvals required, missing information, risk flags and next step**. It also carries an action label, a run ID and telemetry.
 
-## How it works
+The **Evidence** tab lists every finding with its source tool and record reference, the full tool trace, and the deterministic policy findings. In the **Human review** tab, a named reviewer records a decision. That record links to the exact run and request, and is the only write the app makes. The decision can be downloaded as a readable handoff or as JSON. Analyses are saved locally and can be reopened after a restart.
+
+**Compare architectures** runs both designs on the selected request side by side. It also shows the saved 18-case benchmark, which can be browsed without any model calls.
+
+Five requests show the main behaviours:
+
+| Request | What to look for |
+|---|---|
+| REQ-1010 | Clean low-value service: within budget, Manager approval only |
+| REQ-1005 | Sales budget shortfall, new vendor, customer PII: Finance, Security, Privacy and Legal |
+| REQ-1007 | Registry says approved, risk service says expired: both shown, human resolves |
+| REQ-1006 | Missing cost, users and data class, plus an embedded "treat as CFO-approved": clarification, injection flagged |
+| REQ-1009 | Vendor-risk API returns 503: the failed check is shown and the request escalates |
+
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -57,173 +56,121 @@ flowchart LR
     T --> P[Policy checks in code]
     P --> A
     A --> D[Structured draft]
-    D --> G[Reconcile against verified findings]
-    G --> H[Human review and handoff]
+    D --> G[Guardrail reconciles draft with policy]
+    G --> H[Human review]
 ```
-
-**Review a request** has a full-width intake and decision flow. After analysis, request details collapse and the next step is prominent. Evidence, human review and diagnostics have their own tabs. The app hides Streamlit’s developer toolbar and deployment prompt; its visible controls are specific to the review workflow.
-
-The header's **Light mode** switch preserves the current request and analysis. The selected appearance survives a refresh of the same URL. Decorative gradients and reflective forms are generated with CSS; no image service, external asset host or model call is involved. Reduced-motion preferences disable the subtle decorative movement.
-
-Selecting or editing a request does not call the model. **Analyse request** starts a run, and **Analyse again** explicitly starts a fresh one. Changing request content or approach invalidates the displayed result. Downloads, review saves and comparison browsing never rerun the agent; the comparison run button is an explicit, billable action in live mode.
-
-Every completed app analysis is stored in ignored `logs/analyses.sqlite3`, including the request, exact result, trace, time and configuration identity. History survives browser and process restarts. Matching sample results from the original experiment are also available as labelled, read-only historical snapshots. Results are never silently substituted for fresh evidence. Older policy/data/model configurations can be inspected and downloaded but cannot record a new review until rerun. External vendor state can still change; each saved result displays its original time.
-
-New requests accept a typed name. An exact, unique directory match supplies the verified department and manager; an optional employee ID resolves duplicate names. An unknown name is accepted, preserved and routed for identity clarification. A typed department cannot create an employee record, prove identity or grant access to another team's budget. These lookups are not authentication.
-
-Every response includes the six required fields: **recommendation, evidence, approvals required, missing information, risk flags and next step**. It also includes an action label, a unique run ID and telemetry.
 
 | Responsibility | Owner |
 |---|---|
-| Interpret the business justification; assess whether catalog overlap has a credible gap | Model, subject to human verification |
-| Approval thresholds, budget arithmetic, assessment dates, conflicts and required reviews | Code |
-| Factual evidence panel and operational next-step wording | Code, generated from retrieved records and policy findings |
-| Approvals, exceptions, accepting terms and purchasing | Human |
+| Interpret the justification; judge whether an overlap with an existing tool has a credible gap; choose among policy-consistent actions | Model |
+| Required fields, approval thresholds, budget arithmetic, 365-day assessment validity, source conflicts, security/privacy/legal triggers | Code |
+| Evidence panel and next-step wording | Code, from retrieved records |
+| Approvals, exceptions, legal terms, purchasing | Human |
 
-The model chooses among policy-consistent actions. Its interpretation is labelled separately from verified facts. The guardrail runs even if the agent omits a tool or fails entirely; fallback is visible and counts as a model failure in evaluation.
+The guardrail runs after every model draft, in both architectures:
 
-## The architecture experiment
+- **Approvals and risk flags.** The final set is the model's plus the policy engine's. A flag is dropped only when the deterministic evidence contradicts it.
+- **Missing information.** Code owns this field.
+- **Next action.** It must be one the policy allows.
+- **Evidence.** Every item must be supported by a tool that ran.
+- **Corrections.** Each one is logged, so a draft's quality stays measurable after it is corrected.
 
-**A — Single agent:** one agent gathers evidence and recommends an action.
+If the model fails entirely, a visible deterministic fallback is used, and the failure counts against the model in evaluation. Diagrams for both architectures and the full guardrail rules are in [docs/architecture.md](docs/architecture.md).
 
-**B — Staged:** an analyst gathers evidence and assesses overlap; a reviewer receives the pack and raw tool outputs, then recommends an action. Only the analyst has tools.
+## Tools and agents
 
-Both use the same OpenAI model, policy, tools, case set and final guardrail. Function calls and final outputs use strict JSON schemas, with local validation. No extra critic or orchestration framework is needed.
-
-| Tool | Evidence / calculation |
+| Tool | What it returns |
 |---|---|
-| `get_requester_profile` | Employee, department and manager |
+| `get_requester_profile` | Employee, department, manager |
 | `check_budget` | Available departmental budget and exact shortfall |
-| `search_software_catalog` | Existing products, vendor/category overlap and scope |
-| `get_vendor_registry_record` | Internal procurement, security and legal statuses |
-| `get_vendor_risk_assessment` | External HTTP assessment; typed missing-record/outage outcomes |
+| `search_software_catalog` | Same product, same vendor and category, or same category |
+| `get_vendor_registry_record` | Internal procurement, security and legal status |
+| `get_vendor_risk_assessment` | External HTTP assessment; a missing record and an outage are distinct outcomes |
 | `get_purchase_history` | Prior purchases for context |
-| `run_policy_checks` | Policy findings, verified facts and allowed next actions |
+| `run_policy_checks` | Approvals, flags, missing information and allowed next actions, computed in code |
 
-All seven tools are deterministic. Inputs are validated locally; results are cached within each request. The model has no purchasing or budget-write tool.
+All seven are deterministic and read-only, with strict JSON schemas. None can purchase, approve or change a budget.
 
-## Reliability that can be tested
+**A: Single agent.** One agent has all seven tools. It gathers evidence and returns the structured decision.
 
-- **Invented evidence:** naming an existing tool is insufficient. The factual panel is generated from code-verified findings. Raw-draft grounding checks exact facts available to the agent before the final guardrail.
-- **Unsafe wording:** a valid action label cannot carry “skip Security” in its next step. Recommendation and handoff wording come from the validated action.
-- **Incomplete evidence:** timeouts, malformed vendor responses, missing/future assessment dates and failed local lookups cannot become favourable statuses.
-- **Model failures:** invalid output schemas, refusals, provider failures and exhausted tool loops produce a visible deterministic fallback. Failed attempts count in telemetry.
-- **Human review:** changing the request or architecture hides stale decisions. Review records reference the exact run; repeated identical submissions are deduplicated.
-- **Repeatability:** tests exercise the actual FastAPI routes in-process. They need neither a listening API nor model credentials.
+**B: Staged.** A Procurement Analyst with the tools builds an evidence pack and does not decide. A Policy and Risk Reviewer with no tools reads the pack and the raw tool outputs, then decides.
 
-```bash
-uv sync --frozen --extra dev
-uv run python -m pytest -q
-uv run python verify_setup.py
-uv run python evals/run_evals.py --provider mock
-```
+Both use the same model, prompts for the ground rules, tools, guardrail and output contract, so the comparison isolates the orchestration choice.
 
-GitHub Actions runs the same offline checks. The [starter-pack audit](docs/starter_audit.md) verifies preserved files by SHA-256 and confirms the original output schema is unchanged. The untouched reference copy is kept locally; completed implementation is at the repository root.
+## Reliability and human controls
 
-## Evaluation and ship decision
+- **Untrusted text.** Request fields and vendor notes are passed as data. A code scan flags instruction-like text, and the guardrail never removes that flag.
+- **Tool failure.** A timeout, 5xx or malformed vendor response never becomes a favourable status. It adds Security review and escalates.
+- **Conflicting sources.** Both values are shown and routed to Security; neither is picked silently.
+- **Invented evidence.** Citing a real tool is not enough. Draft evidence must match facts that tool actually returned.
+- **Stale results.** Changing the request or architecture hides the old decision. A review always records the exact run it refers to.
+- **Human authority.** `human_review_required` is always true.
 
-The 18 cases cover public requirements, all remaining starter requests, financial boundaries, missing budget data, prompt injection, unknown vendors, employee PII and API outages.
+## Evaluation results
 
-The comparison records final policy correctness **and** raw-draft correctness, exact evidence support, guardrail corrections, model failures, latency, tool/model calls and tokens. Case/architecture order is paired and shuffled with a recorded seed. Every trial is saved immediately, including failures; source hashes and configuration make the experiment traceable.
-
-```bash
-# Verify live access with a small case first; no separate API server needed.
-uv run python evals/run_evals.py --provider openai --case-id EXT-10
-# Then compare both architectures on the full same test set.
-uv run python evals/run_evals.py --provider openai --repeats 1
-```
-
-The API is billed to the account owning `OPENAI_API_KEY`. Each run records tokens and accepts explicit price inputs for a reproducible estimate. Provider failures and time spent waiting for rate limits remain visible in the report.
+Both architectures ran the same 18 cases. Six are the public cases, four are the remaining starter requests, and eight are synthetic cases covering threshold boundaries, a missing budget line, injection in a product name, an unknown vendor, employee PII and an API outage. Each run is scored twice, on the model's raw draft and on the final decision, and latency, model calls, tool calls and tokens are recorded.
 
 <!-- RESULTS:BEGIN -->
-**Ship the single agent for supervised use.** In the [complete OpenAI experiment](evals/results/openai-comparison-20261008/summary.md), 18 cases were run once per architecture with `gpt-6-astra`, medium reasoning, paired order and seed 42.
+Full run: [summary](evals/results/openai-comparison-20261008/summary.md) · [case analysis](evals/results/openai-comparison-20261008/case_analysis.md) · [per-run CSV](evals/results/openai-comparison-20261008/runs.csv). The run used `gpt-6-astra` at medium reasoning, one trial per architecture, with paired order shuffled with seed 42.
 
 | Measured result | Single | Staged |
 |---|---:|---:|
-| Final end-to-end checks passed | **18/18** | 17/18 |
-| Raw-draft checks passed | **18/18** | 14/18 |
+| Final decision checks passed | **18/18** | 17/18 |
+| Raw draft checks passed, before guardrail | **18/18** | 14/18 |
 | Required approvals and human review preserved | 18/18 | 18/18 |
 | Draft evidence exactly supported | 100% | 100% |
-| Field corrections across all requests | **0** | 14 |
+| Guardrail corrections, all cases | **0** | 14 |
 | Mean latency | **22.5 s** | 34.8 s |
-| Observed p95 latency | 25.9 s | 38.8 s |
+| p95 latency | 25.9 s | 38.8 s |
 | Mean model / tool calls | 3.94 / 7.83 | 4.94 / 7.78 |
 | Mean input / output tokens | 11,179 / 803 | 14,614 / 1,512 |
-| Indicative token cost per request | **$0.152** | $0.222 |
+| Indicative cost per request | **$0.152** | $0.222 |
 | Provider failures / rate-limit retries | 0 / 0 | 0 / 0 |
 
-Single used 35% less time and approximately 31% less estimated token cost. The staged final failure is a strict sequencing disagreement on **SYN-17**, with Security and Privacy approvals retained. Its other raw failures concern follow-up questions placed in the missing-information field. These are narrower findings than a safety failure; see the [case analysis](evals/results/openai-comparison-20261008/case_analysis.md) and [decision memo](docs/architecture_decision.md).
+Cost uses $10 per million input tokens and $50 per million output tokens, from OpenAI's listed prices, excluding cache discounts.
 
-Prices supplied to the runner were $10 per million input tokens and $50 per million output tokens, from the [OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-6-astra). The estimate excludes cache discounts and is not an invoice. One repeat on a small, mostly policy-driven case set does not establish production reliability or a statistically significant quality difference.
-
-The comparison measures source commit `fd4f419`. Reviewing it exposed rounded budget prose; the current code preserves cents, verified separately in the [precision follow-up](evals/results/openai-precision-live-20261008/summary.md). Original trials and scores are unchanged. The [experiment index](evals/results/README.md) distinguishes the main comparison, follow-up and integration pilots.
+The run measured source commit `fd4f419`. A later fix keeps cents in budget evidence; it was verified in a separate [precision run](evals/results/openai-precision-live-20261008/verification.md), and the original scores are unchanged.
 <!-- RESULTS:END -->
 
-## Assessment requirement coverage
+![Architecture comparison in the app](docs/images/architecture-comparison.png)
 
-Checked against the final supplied **FDE_Assessment_3.pdf**, including its public-repository and README requirements. The [starter audit](docs/starter_audit.md) verifies the supplied data, mock service, public harness and original output contract were preserved.
+## Architecture comparison and ship decision
 
-| Brief requirement | Implementation and reviewable evidence |
-|---|---|
-| Product UI: request, evidence, recommendation and action | [Review workspace](ui/review.py), full source references, local human review, Markdown/JSON handoff; [interaction tests](tests/test_ui.py) |
-| At least 3 tools, including a deterministic tool | [7 schema-validated tools](src/tools/__init__.py); thresholds, budget and assessment validity are code-owned |
-| Working single-agent baseline | [Single agent](src/agents/single.py), starter-compatible [adapter](src/solution.py), saved real model trials |
-| Structured output with all six required fields | [Original contract plus compatible extension](src/contracts.py): recommendation, evidence, required approvals, missing information, risk flags, next step |
-| Human handoff; sensitive approvals stay with people | [Guardrail](src/guardrails.py), advisory next-step templates, human-review log tied to the exact run; no purchasing or approval-write tool |
-| Lightweight staged / two-agent comparison | [Analyst → reviewer](src/agents/staged.py), same model, reasoning setting, tools, guardrail and 18-case test set |
-| Evaluate action, grounding, policy, escalation, latency and calls | [Reproducible evaluator](evals/run_evals.py), [metric definitions](evals/README.md), [CSV](evals/results/openai-comparison-20261008/runs.csv), drafts and traces |
-| All six edge-case families in the brief | Incomplete inputs, overlap, expired/conflicting vendors, sensitive data/thresholds, injected instructions and unavailable tools: [labelled cases](evals/cases.json), policy/guardrail/pipeline tests |
-| One-command local app | `uv run python run_local.py --demo` starts UI and supplied vendor API without credentials; the same launcher supports live OpenAI |
-| Architecture / workflow diagram and assumptions | Workflow above; [both architecture diagrams and boundaries](docs/architecture.md); explicit assumptions and limits below |
-| Architecture decision memo, maximum 500 words | [Results-backed memo](docs/architecture_decision.md): ship single for supervised use, explain the staged miss and evidence limits |
-| Clear README, setup and secret hygiene | This README, locked dependencies, offline CI, `.env.example`; credentials and runtime history/reviews excluded from Git |
+**Ship the single agent for supervised use.** It matched or beat the staged variant on every quality measure, and it was faster and cheaper.
 
-The scoring weights are product/workflow **15%**, end-to-end product **20%**, agent/tool design **20%**, reliability/human controls **15%**, evaluation/comparison **20%**, and engineering/communication **10%**.
+The staged variant's one final failure was on **SYN-17**. It checked the existing DocSpace licence before routing an employee-PII request for review. It kept the Security and Privacy approvals; it disagreed with the label only on which step comes first. Most of its 14 corrections were useful follow-up questions placed in the missing-information field, not invented facts.
 
-## Engineering decisions and tradeoffs
+The second role added observations but no measurable quality gain to justify an extra model call and about 30% more tokens per request. The reasoning is in the [decision memo](docs/architecture_decision.md).
 
-| Decision | Reason and consequence |
-|---|---|
-| Build on the supplied scaffold | Preserves the evaluator contract and source data. Fixes are documented and regression-tested instead of changing inconvenient fixtures. |
-| Code owns policy; the model chooses within valid actions | Exact thresholds and mandatory reviews need repeatability. Business-context interpretation still matters, but model prose cannot bypass a required review. |
-| Keep factual evidence separate from model interpretation | A plausible source name is insufficient grounding. Facts come from verified tool findings; free-form rationale stays labelled for human verification. |
-| Ship the single agent for a supervised pilot | The measured baseline matched or outperformed staged on this set with fewer calls and lower latency. Two roles remain available for investigation, not as an unsupported quality claim. |
-| Preserve raw and corrected outputs, including failures | A guardrail can hide model mistakes. Separate scores reveal that effect; failed provider attempts remain visible rather than becoming successful policy fallbacks. |
-| Separate the fixed benchmark from request comparison | The benchmark has labels and supports the ship decision. An ad-hoc pair shows differences and resource usage, but agreement is not a correctness score and is never pooled into benchmark accuracy. |
-| Store immutable run snapshots in SQLite | Survives reloads, supports concurrent local writes and needs no extra service. Full input/configuration identity prevents accidental reuse across changed requests; it remains a local, unauthenticated store. |
-| Reuse a matching run only as an explicit snapshot | Avoids paying repeatedly to inspect a result. Refreshing evidence is a distinct action; no cache key can prove an external vendor's state has stayed unchanged. |
-| Accept arbitrary names without inventing organisational authority | Makes intake usable while retaining the distinction between a supplied name and a verified directory record. Unknown or ambiguous requesters get clarification, not an assumed budget. |
-| Persist each comparison result separately | A failed second architecture does not discard or rerun the successful first. Retries target the missing design, limiting unnecessary calls. |
-| Prefer a one-command local vertical slice | The assignment needs a working local product. Authentication, real approval routing and managed storage are explicit rollout requirements, not fake buttons in the demo. |
+## Assumptions
 
-The [workflow notes](docs/workflow_notes.md) record discovered failures and fixes. The [architecture document](docs/architecture.md) explains control/data boundaries, and the [evaluation guide](evals/README.md) defines the measurements and reproducibility controls.
+- All date checks use the policy's **2026-09-30** snapshot, not the machine clock.
+- Costs are annualised USD. The budget check compares the cost with the requester's department's available budget only.
+- A requester with no manager routes to the Department Head. This is an implementation choice; the policy doesn't say.
+- `internal_*` data classes are not sensitive. Source code, production systems, confidential documents, PII and credentials are. SSO is a standard integration.
+- A vendor is "new" for the legal rule if it is not `Approved` in the registry.
 
-## Assumptions and limits
+## Known limitations
 
-- All date checks use the assignment's **2026-09-30** policy snapshot, not the machine clock. The assessment expires at the end of its 365-day validity interval.
-- Costs are annualised USD. Available budget is a snapshot, not a reservation; concurrent requests can still compete for the same funds.
-- A requester without a manager routes to the Department Head. This is an explicit implementation assumption, not a quoted policy rule.
-- Catalog data has no utilisation or detailed feature entitlements. The model may assess a claimed gap but cannot verify spare seats or vendor capabilities.
-- Exact evidence copying is intentionally stricter than semantic entailment: a correct paraphrase can score as unsupported. Model rationale is not automatically fact-checked.
-- Injection detection is pattern-based plus prompt instructions; it is not a general injection-proofing claim.
-- The review log is local and unauthenticated. It is not a production approval system or a tamper-proof audit ledger.
-- Analysis history is shared by sessions using the same local database. It contains request data and must stay out of a public repository. Production use needs authentication, per-user access, retention rules and managed backup; none is implied by the local prototype.
-- The case set is small and developer-authored. Repeats measure consistency, not independent sample size. Provider throttling can dominate latency.
+- **One trial per architecture.** The case set is small and developer-labelled, and most of it tests rules the code enforces, so it separates the two designs only weakly.
+- **Narrow judgement test.** Overlap judgement, where the model matters most, is tested mainly by REQ-1008.
+- **Injection detection.** It combines pattern matching with prompt instructions. It does not catch every paraphrase.
+- **Seat usage.** The catalog has no usage data, so spare existing seats cannot be verified.
+- **Local storage.** The review log and analysis history are local and unauthenticated. Production would need sign-in, roles and real approval routing.
 
 ## Repository map
 
 | Path | Purpose |
 |---|---|
-| `app.py`, `ui/`, `run_local.py` | Product entry point, presentation and one-command launcher |
-| `src/solution.py` | Starter-compatible `handle_request(request_id, architecture)` |
-| `src/rules.py`, `src/tools/` | Policy and seven tools |
+| `app.py`, `ui/`, `run_local.py` | UI and one-command launcher |
+| `src/solution.py` | Starter adapter `handle_request(request_id, architecture)` |
+| `src/rules.py`, `src/tools/` | Policy engine and the seven tools |
 | `src/agents/` | Single and staged architectures |
-| `src/guardrails.py`, `src/evidence.py` | Validated action and factual evidence boundary |
-| `src/llm.py`, `src/openai_client.py` | OpenAI Responses adapter and offline test fixture |
-| `src/audit.py` | Request fingerprints and local human-review records |
-| `ui/history.py`, `ui/runs.py`, `ui/intake.py` | Durable analysis snapshots, explicit run/reuse coordination and typed-name resolution |
-| `evals/` | Labelled cases, runner, complete and partial experiment artifacts |
-| `tests/` | Policy, adversarial output, provider protocol, pipeline and UI checks |
-| `docs/` | Architecture, reviewer walkthrough, decision memo and workflow notes |
+| `src/guardrails.py`, `src/evidence.py` | Draft reconciliation and verified evidence |
+| `src/llm.py`, `src/openai_client.py` | OpenAI Responses adapter and scripted demo model |
+| `src/audit.py` | Run fingerprints and human-review records |
+| `evals/` | Labelled cases, runners and saved results |
+| `tests/` | Policy, tools, guardrail, reliability, provider protocol, pipeline and UI tests |
+| `docs/` | Architecture, decision memo, build notes |
 
-The [workflow notes](docs/workflow_notes.md) explain starter issues and subsequent reliability fixes.
+Starter data, the mock API and the public evaluation harness are unchanged. Problems found in the scaffold and how they were handled are in the [build notes](docs/workflow_notes.md).

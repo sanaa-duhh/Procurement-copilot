@@ -6,11 +6,9 @@ The live provider for these runs is OpenAI. A scripted demo screenshot is UI evi
 |---|---|---|
 | `openai-comparison-20261008/` | Same 18 cases, one trial per architecture, paired order with seed 42 | Main comparison; read its completion status and the case analysis |
 | `openai-precision-live-20261008/` | Four trials after the money-precision fix, covering SYN-12 and SYN-13 on both architectures | Targeted verification only; excluded from main comparison metrics |
-| `openai-precision-followup-20261008/` | Initial precision-check attempt stopped on a connection failure before a model draft | Incomplete attempt retained; a fresh complete verification uses the directory above |
 | `pilot-openai-live-20261008/` | One simple case through each architecture, confirming live tool calls and structured outputs | Integration check only; excluded from the main metrics |
-| `pilot-openai-20261008/` | Initial attempt blocked by the execution sandbox's network restrictions | Incomplete failure evidence; excluded from model-quality conclusions |
 
-Earlier failures remain available. They were not replaced with successful trials or merged into the comparison. The live pilot used an earlier source fingerprint; the main experiment records its own source and settings.
+The live pilot used an earlier source fingerprint; the main experiment records its own source and settings.
 
 Each directory contains `manifest.json`, a readable `summary.md`, machine-readable `summary.json`, per-run `runs.csv`, full `decisions.jsonl`, and an append-only trial checkpoint. The response IDs in the traces establish which OpenAI responses contributed to each result; credentials and encrypted reasoning are excluded.
 

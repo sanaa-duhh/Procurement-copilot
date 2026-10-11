@@ -6,8 +6,6 @@ The main comparison exposed whole-dollar rounding in budget and legal evidence s
 
 Three regression checks first reproduced the defect, including a $1,000.01 request against a $1,000 budget whose one-cent shortfall appeared as “by $0.” All 112 tests pass after the correction. The live SYN-13 decisions now retain both the **$10,000.01 cost** and **$3,000.01 shortfall** in their budget evidence.
 
-An [earlier attempt](../openai-precision-followup-20261008/summary.md) stopped on a connection failure before producing a model draft. That partial result is preserved. After verifying OpenAI connectivity, this fresh experiment ran the entire four-trial set; no failed record was overwritten or removed.
-
 These results verify the precision change only. They are not pooled into the [original architecture comparison](../openai-comparison-20261008/summary.md), whose 36 trials and source fingerprint remain unchanged.
 
 To reproduce with the current source and your shell's `OPENAI_API_KEY`:

@@ -38,8 +38,7 @@ OpenAI is the final provider choice. Both architectures use the same Responses A
 
 ## Starter-pack provenance
 
-The user-supplied pack was compared file-by-file against the root implementation and the initial commit. All nine data files, mock API files, public cases and runner, data-access helpers, brief and integrity tests match byte-for-byte. The original ProcurementDecision JSON schema also matches. Optional templates and sample output are retained at their original root paths; completed documents are in docs/. The hash manifest and compatibility tests make this check reproducible after cloning.
-
+The starter data, mock API, public cases and runner, data-access helpers and integrity tests stay unchanged at their original paths. The original `ProcurementDecision` contract is untouched; the extended decision is a subclass and validates against it.
 
 ## Findings from the live comparison
 
@@ -57,7 +56,7 @@ Streamlit's developer menu and deployment prompt are hidden. Analysis starts onl
 
 The offline interaction tests cover these state transitions and actual review-log writes. The browser audit exercises both architectures, sample and new requests, four downloads, review validation, untrusted HTML escaping and mobile layouts. Screenshot generation is restricted to the scripted demo. No paid model calls were used to validate this interface change; the saved architecture experiment and agent implementation are unchanged.
 
-The visual direction was refined from supplied references: deep teal with layered lighting and grain by default, and a soft mint/blue gradient in light mode. Reflective curved forms use CSS gradients and masks, avoiding downloaded imagery and external assets. The theme switch retains the current analysis and remembers the preference in the URL. Testing caught native controls retaining dark backgrounds in light mode and decorative artwork overflowing on mobile; both were corrected against the actual installed Streamlit DOM. The suite now includes a theme-state regression check, and the browser script runs independently with `--theme dark` and `--theme light`.
+The visual direction was refined from supplied references: deep teal with layered lighting and grain by default, and a soft mint/blue gradient in light mode. Reflective curved forms use CSS gradients and masks, avoiding downloaded imagery and external assets. The theme switch retains the current analysis and remembers the preference in the URL. Testing caught native controls retaining dark backgrounds in light mode and decorative artwork overflowing on mobile; both were corrected against the actual installed Streamlit DOM. The suite now includes a theme-state regression check.
 
 ## Analysis lifecycle and requirement closure
 
@@ -67,4 +66,4 @@ The requester dropdown was replaced with typed name, optional employee ID and a 
 
 The comparison workspace now has two purposes: an exploratory pair for the selected request, and the fixed labelled benchmark that supports the ship decision. The exploratory view reuses compatible local analyses and runs only a missing architecture on explicit request. Completed results survive a partial failure, and a retry does not bill for the successful half again. Unlabelled agreement never becomes an accuracy claim or changes the published experiment.
 
-Both the preserved starter brief and the final supplied `FDE_Assessment_3.pdf` were rechecked. The README now provides a requirement-to-evidence table, the exact scoring categories, engineering tradeoffs, assumptions and limitations. New tests cover restart persistence, immutable and concurrent saves, configuration changes, benchmark provenance, name ambiguity, partial comparison failure and disk-write failure. All verification for these changes uses the scripted model; the paid experiment remains unchanged.
+New tests cover restart persistence, immutable and concurrent saves, configuration changes, benchmark provenance, name ambiguity, partial comparison failure and disk-write failure. All verification for these changes uses the scripted model; the paid experiment remains unchanged.
