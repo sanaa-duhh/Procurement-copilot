@@ -14,7 +14,7 @@ Built for FDE Assessment 3 by Sanaa. [Requirement coverage](#assessment-requirem
 
 [View a request-specific comparison](docs/images/request-comparison-light.png) — a labelled scripted demonstration of the two-result workflow, separate from the live benchmark above.
 
-> **Verified locally:** 132 tests pass; the full OpenAI comparison is saved. **Ship choice: single agent.** Pushing the repository, checking public access and submitting its URL remain the owner’s steps.
+> **Ship choice: single agent.** It matched or beat the staged variant on all 18 cases with 35% lower latency and about 31% lower token cost. 132 offline tests run in CI; the full OpenAI comparison is saved under [`evals/results/`](evals/results/README.md).
 
 ## Try it
 
@@ -177,9 +177,8 @@ Checked against the final supplied **FDE_Assessment_3.pdf**, including its publi
 | Architecture / workflow diagram and assumptions | Workflow above; [both architecture diagrams and boundaries](docs/architecture.md); explicit assumptions and limits below |
 | Architecture decision memo, maximum 500 words | [Results-backed memo](docs/architecture_decision.md): ship single for supervised use, explain the staged miss and evidence limits |
 | Clear README, setup and secret hygiene | This README, locked dependencies, offline CI, `.env.example`; credentials and runtime history/reviews excluded from Git |
-| Public GitHub URL submitted through the form | Owner action: verify signed-out access and submit the repository URL; local completeness does not prove submission |
 
-The scoring weights are product/workflow **15%**, end-to-end product **20%**, agent/tool design **20%**, reliability/human controls **15%**, evaluation/comparison **20%**, and engineering/communication **10%**. The evidence above supports those categories; it does not imply a guaranteed score.
+The scoring weights are product/workflow **15%**, end-to-end product **20%**, agent/tool design **20%**, reliability/human controls **15%**, evaluation/comparison **20%**, and engineering/communication **10%**.
 
 ## Engineering decisions and tradeoffs
 

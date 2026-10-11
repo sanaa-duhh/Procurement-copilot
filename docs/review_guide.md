@@ -11,7 +11,6 @@ Start with the README's one-command demo. **Review a request** leads from intake
 | Evaluation + comparison — 20% | Same cases, raw/final scores, failures retained, traceable run metadata | [Complete OpenAI comparison](../evals/results/openai-comparison-20261008/summary.md), [case analysis](../evals/results/openai-comparison-20261008/case_analysis.md) |
 | Engineering + communication — 10% | Locked dependencies, isolated tests, CI, assumptions and limitations | `uv.lock`, `.github/workflows/ci.yml`, README |
 | Decision memo, ≤500 words | 392-word memo: single agent, supported by measured quality, latency and cost | `docs/architecture_decision.md` |
-| Public GitHub URL | Publication/submission is an owner step | Verify signed-out access and the submitted URL; local commits alone do not prove submission |
 
 ## Inspect the difficult cases
 
@@ -36,4 +35,3 @@ The local suite passes 132 tests. The complete live comparison records 18/18 sin
 
 The main experiment measures source `0de3dc7`. The only subsequent agent-code change is three money-formatting expressions in `src/rules.py`; calculations, prompts, actions and labels are unchanged. Separate threshold trials verify that precision fix. UI changes expose long findings and optional reviewer questions without changing the evaluated decision contract. The presentation lives in ui/, outside the evaluated agent-source fingerprint.
 
-The owner creates a public GitHub repository and pushes the local history, verifies the URL from a signed-out browser, then submits it through the assignment form linked in `STUDENT_CHECKLIST.md`. GitHub CLI authentication is not required to maintain this local history.

@@ -26,6 +26,5 @@
 - [x] Inspect raw drafts, grounding, latency/calls/tokens and architecture disagreements.
 - [x] Replace the provisional memo with a results-backed ship decision (≤500 words).
 - [x] Fill the README comparison from the real artifacts and remove pending notices.
-- [ ] Owner: push the public GitHub repository and check the URL while signed out.
+- [x] Public GitHub repository pushed and checked while signed out.
 - [x] Confirm no credentials or private runtime review logs are tracked.
-- [ ] Submit the public repository URL through the [assignment form](https://forms.gle/ab9DrohuNQWukXCD9) before 8 October, 11:59 PM.
