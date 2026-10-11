@@ -138,6 +138,18 @@ def check_policy_engine() -> None:
     ok("Deterministic policy engine checks passed")
 
 
+def check_policy_config() -> None:
+    """config/policy.toml must enforce exactly what data/procurement_policy.md says."""
+    from src import policy_config
+    from src.data_access import load_policy_text
+
+    config = policy_config.load()
+    problems = policy_config.check_against_document(config, load_policy_text())
+    if problems:
+        fail("Policy config has drifted from the written policy: " + "; ".join(problems))
+    ok(f"Policy config v{config.version} matches the written policy ({len(config.data_classes)} data classes registered)")
+
+
 def check_credentials() -> None:
     import os
     provider = os.getenv("LLM_PROVIDER", "openai").lower()
@@ -173,6 +185,7 @@ def main() -> None:
     check_data()
     check_contract_and_evals()
     check_mock_api()
+    check_policy_config()
     check_policy_engine()
     check_credentials()
     print("\nPRE-FLIGHT PASSED")

@@ -44,4 +44,5 @@ def handle_request_payload(request: dict[str, Any], architecture: Architecture =
     decision = reconcile(draft, findings, registry, request, telemetry, architecture=architecture, model=client.model, trace=trace)
     decision.run_id = str(uuid4())
     decision.request_fingerprint = request_fingerprint(request)
+    decision.policy_version = rules.POLICY_VERSION
     return decision

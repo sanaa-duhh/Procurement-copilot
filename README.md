@@ -21,7 +21,7 @@ Open http://127.0.0.1:8501. One command starts both the UI and the vendor-risk A
 For live analysis, put `OPENAI_API_KEY` in your shell or in `.env` (copy `.env.example`), then run `uv run python run_local.py`. The model is `gpt-6-astra` at medium reasoning effort, through the OpenAI Responses API.
 
 ```bash
-uv run pytest -q                                          # 132 offline tests, no key or server needed
+uv run pytest -q                                          # 163 offline tests, no key or server needed
 uv run python verify_setup.py                             # preflight checks
 uv run python evals/run_evals.py --provider openai        # full comparison, both architectures
 uv run python evals/run_public_evals.py --architecture single   # starter harness
@@ -63,7 +63,7 @@ flowchart LR
 | Responsibility | Owner |
 |---|---|
 | Interpret the justification; judge whether an overlap with an existing tool has a credible gap; choose among policy-consistent actions | Model |
-| Required fields, approval thresholds, budget arithmetic, 365-day assessment validity, source conflicts, security/privacy/legal triggers | Code |
+| Required fields, approval thresholds, budget arithmetic, 365-day assessment validity, source conflicts, data classification, security/privacy/legal triggers, review order | Code, configured in [`config/policy.toml`](config/policy.toml) |
 | Evidence panel and next-step wording | Code, from retrieved records |
 | Approvals, exceptions, legal terms, purchasing | Human |
 
@@ -71,11 +71,21 @@ The guardrail runs after every model draft, in both architectures:
 
 - **Approvals and risk flags.** The final set is the model's plus the policy engine's. A flag is dropped only when the deterministic evidence contradicts it.
 - **Missing information.** Code owns this field.
-- **Next action.** It must be one the policy allows.
+- **Next action.** It must be one the policy allows. When Security, Privacy or Legal review is required, those reviews start first; an existing-tool check runs alongside them and cannot replace them.
 - **Evidence.** Every item must be supported by a tool that ran.
 - **Corrections.** Each one is logged, so a draft's quality stays measurable after it is corrected.
 
 If the model fails entirely, a visible deterministic fallback is used, and the failure counts against the model in evaluation. Diagrams for both architectures and the full guardrail rules are in [docs/architecture.md](docs/architecture.md).
+
+## Policy as configuration
+
+The enforced policy lives in [`config/policy.toml`](config/policy.toml), not in Python constants. It holds the approval tiers, the 365-day assessment window, the $10,000 legal threshold, the review-order rule, a data-classification register and the integrations that need Security.
+
+- **No silent drift.** The preflight and the test suite read the written policy, `data/procurement_policy.md`, and fail if its thresholds, validity window, legal threshold or version differ from the config.
+- **Fail closed on unknown data.** Data-access labels match registered classes by whole words. `payroll_data`, `hr_records` and `health_records` map to personal data and require Security and Privacy. A label that matches no class is not treated as safe: Security and Privacy are asked to classify it before approval.
+- **Auditable.** Every decision records the policy version it was made under.
+
+A client's Security or Procurement team can change these values without touching code, and the checks prove the change matches the written policy.
 
 ## Tools and agents
 
@@ -104,6 +114,7 @@ Both use the same model, prompts for the ground rules, tools, guardrail and outp
 - **Conflicting sources.** Both values are shown and routed to Security; neither is picked silently.
 - **Invented evidence.** Citing a real tool is not enough. Draft evidence must match facts that tool actually returned.
 - **Stale results.** Changing the request or architecture hides the old decision. A review always records the exact run it refers to.
+- **Unknown data classes.** An unregistered data label routes to Security and Privacy instead of passing as routine.
 - **Human authority.** `human_review_required` is always true.
 
 ## Evaluation results
@@ -111,11 +122,12 @@ Both use the same model, prompts for the ground rules, tools, guardrail and outp
 Both architectures ran the same 18 cases. Six are the public cases, four are the remaining starter requests, and eight are synthetic cases covering threshold boundaries, a missing budget line, injection in a product name, an unknown vendor, employee PII and an API outage. Each run is scored twice, on the model's raw draft and on the final decision, and latency, model calls, tool calls and tokens are recorded.
 
 <!-- RESULTS:BEGIN -->
-Main run: 18 cases × 3 repeats per architecture, 108 live trials on the current source, `gpt-6-astra` at medium reasoning, paired order shuffled with seed 42. [Summary](evals/results/openai-repeats-20261011/summary.md) · [case analysis](evals/results/openai-repeats-20261011/case_analysis.md) · [per-run CSV](evals/results/openai-repeats-20261011/runs.csv)
+Main run: 18 cases × 3 repeats per architecture, 108 live trials on source commit `334034e`, `gpt-6-astra` at medium reasoning, paired order shuffled with seed 42. [Summary](evals/results/openai-repeats-20261011/summary.md) · [case analysis](evals/results/openai-repeats-20261011/case_analysis.md) · [per-run CSV](evals/results/openai-repeats-20261011/runs.csv)
 
 | Measured result | Single | Staged |
 |---|---:|---:|
 | Final decision checks passed | **54/54** | 47/54 |
+| Final checks, [replayed](evals/results/openai-repeats-20261011/replay.md) under the current policy layer | **54/54** | 52/54 |
 | Raw draft checks passed, before guardrail | **54/54** | 42/54 |
 | Exact approval set / correct next action | 54 / 54 | 52 / 49 |
 | Human review preserved | 54/54 | 54/54 |
@@ -137,22 +149,25 @@ The [first experiment](evals/results/openai-comparison-20261008/summary.md), one
 
 ## Architecture comparison and ship decision
 
-**Ship the single agent for supervised use.** It passed every trial in both experiments, never needed a guardrail correction, and was faster and cheaper.
+**Ship the single agent for supervised use.** It passed every trial in both experiments, its raw drafts never needed a correction, and it was 43% faster and 31% cheaper.
 
-All seven staged failures come from one repeatable behaviour. When a request overlaps an existing tool, the staged reviewer wants spare capacity checked first, even when specialist reviews are required. It did this on SYN-17 in all three repeats and on PUB-03 in two. On PUB-02 it twice added a Privacy review the request does not need. No failure dropped a required control, and the reasoning is defensible. But it departs from the policy's order of work consistently, while costing an extra model call and about 46% more per request.
+All seven staged failures came from one repeatable behaviour. When a request overlaps an existing tool, the staged reviewer wants spare capacity checked first, even when specialist reviews are required. It did this on SYN-17 in all three repeats and on PUB-03 in two. On PUB-02 it twice added a Privacy review the request does not need. No failure dropped a required control.
 
-The second role adds a sceptical voice, not measurable quality. The reasoning is in the [decision memo](docs/architecture_decision.md).
+The review order was a gap in the policy layer, not only a model habit, so it is now a rule in [`config/policy.toml`](config/policy.toml). [Replaying](evals/results/openai-repeats-20261011/replay.md) the saved drafts through the updated guardrail, with no model or tool calls, lifts staged's final score from 47/54 to 52/54. The two remaining failures are the extra Privacy reviews. Single stays at 54/54.
+
+The guardrail now protects both designs equally. The difference that remains is the model's own quality before correction: 54/54 raw drafts against 42/54, at lower latency and cost. The reasoning is in the [decision memo](docs/architecture_decision.md).
 
 ## Assumptions
 
 - All date checks use the policy's **2026-09-30** snapshot, not the machine clock.
 - Costs are annualised USD. The budget check compares the cost with the requester's department's available budget only.
 - A requester with no manager routes to the Department Head. This is an implementation choice; the policy doesn't say.
-- `internal_*` data classes are not sensitive. Source code, production systems, confidential documents, PII and credentials are. SSO is a standard integration.
+- Data sensitivity follows the classification register in `config/policy.toml`. Internal and public data are not sensitive; source code, production systems, confidential documents, credentials and personal data are. SSO is a standard integration.
 - A vendor is "new" for the legal rule if it is not `Approved` in the registry.
 
 ## Known limitations
 
+- **Register coverage.** The classification register covers the classes in the data plus common HR, payroll and health labels. Anything else is routed for classification, which is safe but adds review work until the register grows.
 - **Small labelled set.** The 18 cases are developer-labelled, and most test rules the code enforces. Three repeats show consistency, not a larger sample.
 - **Narrow judgement test.** Overlap judgement, where the model matters most, is tested mainly by REQ-1008.
 - **Injection detection.** It combines pattern matching with prompt instructions. It does not catch every paraphrase.
@@ -165,12 +180,13 @@ The second role adds a sceptical voice, not measurable quality. The reasoning is
 |---|---|
 | `app.py`, `ui/`, `run_local.py` | UI and one-command launcher |
 | `src/solution.py` | Starter adapter `handle_request(request_id, architecture)` |
+| `config/policy.toml`, `src/policy_config.py` | Enforced policy values, data-classification register, drift check |
 | `src/rules.py`, `src/tools/` | Policy engine and the seven tools |
 | `src/agents/` | Single and staged architectures |
 | `src/guardrails.py`, `src/evidence.py` | Draft reconciliation and verified evidence |
 | `src/llm.py`, `src/openai_client.py` | OpenAI Responses adapter and scripted demo model |
 | `src/audit.py` | Run fingerprints and human-review records |
-| `evals/` | Labelled cases, runners and saved results |
+| `evals/` | Labelled cases, runners, offline replay and saved results |
 | `tests/` | Policy, tools, guardrail, reliability, provider protocol, pipeline and UI tests |
 | `docs/` | Architecture, decision memo, build notes |
 

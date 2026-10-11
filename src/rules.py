@@ -15,6 +15,7 @@ from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from src import policy_config
 from src.contracts import EvidenceItem
 from src.data_access import load_policy_text
 
@@ -23,18 +24,18 @@ from src.data_access import load_policy_text
 # --------------------------------------------------------------------------
 
 _FALLBACK_REFERENCE_DATE = date(2026, 9, 30)
-SECURITY_ASSESSMENT_VALIDITY_DAYS = 365
-LEGAL_NEW_VENDOR_SPEND_THRESHOLD = Decimal("10000")
+
+# Enforced values come from config/policy.toml; `policy_config.check_against_document`
+# guarantees they match the written policy.
+POLICY = policy_config.current()
+POLICY_VERSION = POLICY.version
+SECURITY_ASSESSMENT_VALIDITY_DAYS = POLICY.assessment_validity_days
+LEGAL_NEW_VENDOR_SPEND_THRESHOLD = POLICY.legal_new_vendor_threshold
 
 APPROVAL_ORDER = ["Manager", "Department Head", "Procurement", "Finance", "CFO", "Security", "Privacy", "Legal"]
 
 # (upper bound inclusive, approvals). Amounts are Decimal to avoid float edge cases at the boundaries.
-APPROVAL_TIERS: list[tuple[Decimal | None, list[str]]] = [
-    (Decimal("1000"), ["Manager"]),
-    (Decimal("10000"), ["Department Head", "Procurement"]),
-    (Decimal("25000"), ["Department Head", "Finance", "Procurement"]),
-    (None, ["Department Head", "Finance", "CFO", "Procurement"]),
-]
+APPROVAL_TIERS: list[tuple[Decimal | None, list[str]]] = [(bound, list(names)) for bound, names in POLICY.approval_tiers]
 
 BLOCKING_FLAGS = {
     "missing_information",
@@ -159,33 +160,44 @@ def _norm(value: Any) -> str:
     return re.sub(r"[\s_\-]+", " ", str(value or "")).strip().lower()
 
 
-_SECURITY_DATA_KEYWORDS = ("source code", "code", "repo", "production", "confidential", "pii", "personal", "credential", "secret", "cloud", "prod")
-_SECURITY_INTEGRATION_KEYWORDS = ("production", "cloud account", "git", "repositor", "credential", "secret", "database", "api key", "source")
-_PRIVACY_DATA_KEYWORDS = ("pii", "personal data", "employee data", "customer data")
-_UNKNOWN_DATA_VALUES = {"", "unknown", "unclear", "tbd", "n/a", "na", "?"}
-_NO_DATA_VALUES = {"none", "no data", "no access"}
+_UNKNOWN_DATA_VALUES = {(), ("unknown",), ("unclear",), ("tbd",), ("n", "a"), ("na",)}
 
 
-def data_access_profile(level: Any) -> dict[str, bool]:
-    text = _norm(level)
+def data_access_profile(level: Any) -> dict[str, Any]:
+    """Classify a data-access label against the register in config/policy.toml.
+
+    Labels match by whole words, so 'zip_codes' is not source code. A label that matches
+    no registered class is `unclassified`: the engine routes it to Security and Privacy
+    rather than treating it as safe. A label matching several classes takes the union.
+    """
+    tokens = policy_config.words(level)
+    if tokens in _UNKNOWN_DATA_VALUES or str(level or "").strip() == "?":
+        return {"unknown": True, "unclassified": False, "classes": [], "none": False,
+                "security_sensitive": False, "pii": False, "confidential": False, "source_code": False, "production": False}
+    matched = [c for c in POLICY.data_classes if any(policy_config.contains_phrase(tokens, label) for label in c.labels)]
+    names = [c.name for c in matched]
+    sensitive = [c for c in matched if c.name != "none"]
     return {
-        "unknown": text in _UNKNOWN_DATA_VALUES,
-        "none": text in _NO_DATA_VALUES,
-        "security_sensitive": any(k in text for k in _SECURITY_DATA_KEYWORDS),
-        "pii": any(k in text for k in _PRIVACY_DATA_KEYWORDS),
-        "confidential": "confidential" in text,
-        "source_code": "source" in text or "code" in text,
-        "production": "prod" in text,
+        "unknown": False,
+        "unclassified": not matched,
+        "classes": names,
+        "none": names == ["none"],
+        "security_sensitive": any(c.security for c in sensitive),
+        "pii": any(c.privacy for c in sensitive),
+        "confidential": any(c.confidential for c in sensitive),
+        "source_code": "source_code" in names,
+        "production": "production" in names,
     }
 
 
 def integration_is_sensitive(integrations: list[Any] | None) -> list[str]:
+    """Integrations that need Security review (policy §5), matched by whole words."""
     hits: list[str] = []
     if not isinstance(integrations, list):
         integrations = [integrations] if integrations else []
     for item in integrations or []:
-        text = _norm(item)
-        if any(k in text for k in _SECURITY_INTEGRATION_KEYWORDS):
+        tokens = policy_config.words(item)
+        if any(policy_config.contains_phrase(tokens, phrase) for phrase in POLICY.sensitive_integrations):
             hits.append(str(item))
     return hits
 
@@ -241,6 +253,7 @@ class RuleFindings:
     allowed_next_actions: list[str] = field(default_factory=list)
     preferred_next_action: str = "route_for_reviews"
     notes: list[str] = field(default_factory=list)
+    data_classes: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -265,6 +278,8 @@ class RuleFindings:
             "preferred_next_action": self.preferred_next_action,
             "evidence": [e.model_dump() for e in self.evidence],
             "notes": self.notes,
+            "policy_version": POLICY_VERSION,
+            "data_classes": self.data_classes,
         }
 
 
@@ -466,14 +481,17 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
 
     # Security (section 5)
     profile = data_access_profile(request.get("data_access_level"))
+    findings.data_classes = profile["classes"] or (["unclassified"] if profile["unclassified"] else [])
     sensitive_integrations = integration_is_sensitive(request.get("requested_integrations"))
     security_reasons: list[str] = []
     if profile["security_sensitive"]:
         security_reasons.append(f"data access level '{request.get('data_access_level')}'")
+    elif profile["unclassified"]:
+        security_reasons.append(f"data access level '{request.get('data_access_level')}' is not in the data-classification register and must be classified")
     if sensitive_integrations:
         security_reasons.append(f"integration with {', '.join(sensitive_integrations)}")
     if findings.vendor_status in {"expired"} or effective_registry_status == "expired":
-        security_reasons.append("vendor security assessment has expired (older than 365 days)")
+        security_reasons.append(f"vendor security assessment has expired (older than {SECURITY_ASSESSMENT_VALIDITY_DAYS} days)")
         flag("vendor_review_expired")
     elif findings.vendor_unavailable:
         security_reasons.append("current vendor security assessment could not be verified (vendor-risk service unavailable)")
@@ -495,6 +513,8 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
     privacy_reasons: list[str] = []
     if profile["pii"]:
         privacy_reasons.append(f"tool will process {request.get('data_access_level')}")
+    elif profile["unclassified"]:
+        privacy_reasons.append(f"unclassified data '{request.get('data_access_level')}' may include personal data")
     if outside_region and (profile["pii"] or profile["confidential"] or profile["security_sensitive"]):
         privacy_reasons.append("vendor stores data outside the operating region")
     if privacy_reasons:
@@ -509,7 +529,7 @@ def evaluate(pack: EvidencePack) -> RuleFindings:
     legal_reasons: list[str] = []
     vendor_is_new = (not registry_found) or _norm(registry.get("procurement_status")) != "approved"
     if vendor_is_new and cost is not None and cost >= LEGAL_NEW_VENDOR_SPEND_THRESHOLD:
-        legal_reasons.append(f"new vendor with annual spend ${cost:,.2f} (>= $10,000)")
+        legal_reasons.append(f"new vendor with annual spend ${cost:,.2f} (>= ${LEGAL_NEW_VENDOR_SPEND_THRESHOLD:,.0f})")
     if registry_found and _norm(registry.get("legal_terms_status")) not in {"approved", "standard"}:
         legal_reasons.append(f"legal terms status is '{registry.get('legal_terms_status')}'")
     elif not registry_found:
@@ -555,12 +575,17 @@ def _next_actions(f: RuleFindings) -> tuple[list[str], str]:
         return ["escalate_manual_review", "route_for_reviews"], "escalate_manual_review"
     if "evidence_unavailable" in f.risk_flags:
         return ["escalate_manual_review"], "escalate_manual_review"
+    # Sequencing rule (config/policy.toml): when Security, Privacy or Legal review is required,
+    # those reviews start first. An existing-tool check may run alongside them but cannot replace them.
+    overlap_check_allowed = bool(f.overlap_kind) and not (f.reviews and POLICY.reviews_before_overlap_check)
     if "budget_insufficient" in f.risk_flags or "budget_unverified" in f.risk_flags:
-        allowed = ["budget_exception_required", "route_for_reviews", "evaluate_existing_tool_first"]
+        allowed = ["budget_exception_required", "route_for_reviews"]
+        if not (f.reviews and POLICY.reviews_before_overlap_check):
+            allowed.append("evaluate_existing_tool_first")
         return allowed, "budget_exception_required"
     if f.reviews:
         allowed = ["route_for_reviews"]
-        if f.overlap_kind:
+        if overlap_check_allowed:
             allowed.append("evaluate_existing_tool_first")
         return allowed, "route_for_reviews"
     if f.overlap_kind in {"same_product", "same_category"}:

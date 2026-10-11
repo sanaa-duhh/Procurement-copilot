@@ -169,6 +169,9 @@ def reconcile(
     # These are operational instructions. Always render from the validated action;
     # a valid enum must not let 'buy immediately / skip Security' through in prose.
     next_step = NEXT_STEP_TEMPLATES[next_action].format(approvals=approvals_text)
+    if findings.overlap_kind and next_action in {"route_for_reviews", "budget_exception_required"}:
+        # Reviews come first (config/policy.toml sequencing rule); the overlap question still runs, in parallel.
+        next_step += " In parallel, ask the owner of the existing catalog tool to confirm whether it already covers the need."
     recommendation = _default_recommendation(next_action, findings)
 
     telemetry_out = ExtendedTelemetry(

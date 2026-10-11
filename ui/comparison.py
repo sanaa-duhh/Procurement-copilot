@@ -206,9 +206,9 @@ def render_benchmark(root: Path) -> None:
     replication = load_replication(root)
     if replication:
         st.subheader("Replication: three repeats")
-        st.caption("The same 18 cases rerun three times per architecture on the current source, 11 October 2026. 54 trials per architecture.")
+        st.caption("The same 18 cases rerun three times per architecture on source commit 334034e, 11 October 2026. 54 trials per architecture.")
         table(["Measured result", "Single agent", "Analyst + reviewer"], replication)
-        text("The single agent passed every trial. The staged reviewer failed SYN-17 in all three repeats and PUB-02 and PUB-03 in some, each time preferring to check the existing tool first or adding an unneeded Privacy review.")
+        text("The single agent passed every trial. The staged reviewer failed SYN-17 in all three repeats and PUB-02 and PUB-03 in some, preferring to check the existing tool before required reviews or adding an unneeded Privacy review. Review order is now a policy rule; replaying the saved drafts under it lifts staged to 52/54 final, while its raw drafts stay at 42/54.")
     st.subheader("Inspect a case")
     st.caption("Start with the disagreement: both designs preserve Security and Privacy reviews, but choose a different first step.")
     case_ids = sorted({r["case_id"] for r in rows})
@@ -240,7 +240,7 @@ def render_benchmark(root: Path) -> None:
         st.write("Six public cases, four other starter requests and eight additional edge cases. Both architectures use the same OpenAI model, reasoning setting, tools and final policy checks. Case order and architecture order were shuffled with seed 42.")
         st.write("The raw draft is scored before code corrections, and the final decision is scored afterwards. Provider errors remain failures even if the policy fallback returns a safe recommendation. Selected evidence achieved exact support in both designs; this does not independently validate free-form rationale.")
         st.write("Vendor calls exercise the supplied API handlers in-process in this experiment. The application uses HTTP. The model calls in the experiment are real.")
-        st.caption("Measured source: fd4f419. A later money-formatting fix was verified separately in four threshold trials; those trials are not pooled into these results. A three-repeat replication on the current source is shown above.")
+        st.caption("Measured source: fd4f419. A later money-formatting fix was verified separately in four threshold trials; those trials are not pooled into these results. A three-repeat replication on source commit `334034e` is shown above.")
         prices = meta.get("prices_usd_per_million")
         if prices:
             st.caption(f"Cost inputs: USD {prices[0]:g} per million input tokens and USD {prices[1]:g} per million output tokens. These are recorded experiment assumptions, not a current billing quote.")

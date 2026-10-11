@@ -80,7 +80,7 @@ Applied to every model draft, in both architectures (`src/guardrails.py`):
 1. `required_approvals` = canonicalised model approvals ∪ engine approvals. Unrecognised names are dropped and logged.
 2. `risk_flags` = canonicalised model flags ∪ engine flags, minus flags the deterministic evidence contradicts (for example `budget_insufficient` when the budget check passed).
 3. `missing_information` is code-owned; policy §1 is an explicit list.
-4. `next_action` must be in the engine's allowed set, otherwise it is replaced by the preferred action. Recommendation and next-step wording are always generated in code. If the action was corrected, the contradictory model rationale is withheld.
+4. `next_action` must be in the engine's allowed set, otherwise it is replaced by the preferred action. When Security, Privacy or Legal review is required, the allowed set excludes "check the existing tool first" (the sequencing rule in `config/policy.toml`); the existing-tool question is added to the next step to run in parallel. Recommendation and next-step wording are always generated in code. If the action was corrected, the contradictory model rationale is withheld.
 5. The factual panel contains only the engine's verified facts. Model evidence without an exact `(source, finding, reference)` match is dropped and logged. Exact copying is a conservative support check, not a semantic entailment model.
 6. `human_review_required` is always true.
 
@@ -118,12 +118,18 @@ plus the raw tool outputs as a JSON list. Both architectures emit the same final
 - The policy reference date (2026-09-30) is the "today" for every date check; it is parsed from `data/procurement_policy.md`.
 - Annual cost is already annualised; no proration or multi-year handling.
 - "Within budget" compares against `available_usd` for the requester's department only; cross-department funding is a Finance decision.
-- `internal_documents` and `internal_marketing` are not sensitive data classes; `confidential_documents`, `source_code`, `production_*`, `*_pii` and credentials are.
-- SSO is treated as a standard integration, not a security trigger; production, cloud-account, repository, database and credential integrations are.
+- Data sensitivity comes from the classification register in `config/policy.toml`, matched by whole words. Internal and public data are not sensitive; confidential documents, source code, production systems, credentials and personal data (customer, employee, HR, payroll, health) are. An unregistered label is routed to Security and Privacy for classification rather than treated as safe.
+- SSO is a standard integration, not a security trigger; production, cloud-account, repository, source-control, database, warehouse and credential integrations are. The list is in the same config.
 - A vendor-level `processes_personal_data=true` does not by itself trigger Privacy review; the request's data-access level does, as does cross-region storage of sensitive data.
 - "New vendor" (policy §7) means not `Approved` in the internal registry, or absent from it.
 - Overlap with the same vendor in the same category is an expansion; whether it is a legitimate add-on or a duplicate is a judgement left to the model (and ultimately the human), with the conservative default being to check existing capacity when the existing agreement already covers the requesting department.
 - `Go To Market` (employee E007's department) has no budget line in the starter data; it is handled as "budget unverifiable" rather than patched in the data.
+
+## Policy as configuration
+
+`config/policy.toml` holds every value the engine enforces: approval tiers, the assessment validity window, the legal new-vendor threshold, the review-order rule, the data-classification register and the security-sensitive integrations. `src/policy_config.py` loads it and compares it with the written policy; `verify_setup.py` and `tests/test_policy_config.py` fail on any difference in tiers, validity window, legal threshold or version. Each decision records `policy_version`.
+
+Moving these values out of code was verified by snapshotting the engine on all 28 cases and requests before and after: approvals, flags, missing information, evidence and preferred actions were identical. The only differences were the allowed-action sets that the new review-order rule was meant to tighten.
 
 ## Not built, on purpose
 

@@ -1,0 +1,1167 @@
+{
+  "experiment": "openai-repeats-20261011",
+  "policy_version": "2026.09",
+  "totals": {
+    "staged": {
+      "trials": 54,
+      "original_final": 47,
+      "replayed_final": 52,
+      "raw": 42
+    },
+    "single": {
+      "trials": 54,
+      "original_final": 54,
+      "replayed_final": 54,
+      "raw": 54
+    }
+  },
+  "changed": [
+    {
+      "case_id": "SYN-17",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ],
+      "original_final": false
+    },
+    {
+      "case_id": "PUB-03",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ],
+      "original_final": false
+    },
+    {
+      "case_id": "PUB-03",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ],
+      "original_final": false
+    },
+    {
+      "case_id": "SYN-17",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ],
+      "original_final": false
+    },
+    {
+      "case_id": "SYN-17",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ],
+      "original_final": false
+    }
+  ],
+  "rows": [
+    {
+      "case_id": "SYN-14",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-14",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-13",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-13",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-05",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "request_clarification",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-05",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "request_clarification",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-10",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "proceed_to_approval",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-10",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "proceed_to_approval",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-06",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-06",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "EXT-08",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "EXT-08",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-17",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ]
+    },
+    {
+      "case_id": "SYN-17",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-07",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-07",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-11",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-11",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-16",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-16",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-02",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": false,
+      "failures": [
+        "approvals ['Department Head', 'Finance', 'Legal', 'Privacy', 'Procurement', 'Security'] != ['Department Head', 'Finance', 'Legal', 'Procurement', 'Security']"
+      ],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ]
+    },
+    {
+      "case_id": "PUB-02",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-12",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-12",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-03",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-03",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ]
+    },
+    {
+      "case_id": "SYN-15",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-15",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-18",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-18",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-09",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-09",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-01",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-01",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-04",
+      "architecture": "single",
+      "repeat": 1,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-04",
+      "architecture": "staged",
+      "repeat": 1,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "EXT-10",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "proceed_to_approval",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-10",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "proceed_to_approval",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-01",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-01",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-04",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-04",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-03",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-03",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ]
+    },
+    {
+      "case_id": "SYN-14",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-14",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-06",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-06",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-11",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-11",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-05",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "request_clarification",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-05",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "request_clarification",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-13",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-13",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-15",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-15",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "EXT-07",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-07",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-16",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-16",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-17",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-17",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ]
+    },
+    {
+      "case_id": "EXT-08",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-08",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-18",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-18",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-02",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-02",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ]
+    },
+    {
+      "case_id": "EXT-09",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "EXT-09",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-12",
+      "architecture": "staged",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-12",
+      "architecture": "single",
+      "repeat": 2,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-13",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-13",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-12",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-12",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-14",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-14",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-10",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "proceed_to_approval",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-10",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "proceed_to_approval",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-03",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-03",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-15",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-15",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-02",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": false,
+      "failures": [
+        "approvals ['Department Head', 'Finance', 'Legal', 'Privacy', 'Procurement', 'Security'] != ['Department Head', 'Finance', 'Legal', 'Procurement', 'Security']"
+      ],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ]
+    },
+    {
+      "case_id": "PUB-02",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-01",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-01",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-16",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-16",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-04",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-04",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "budget_exception_required",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-09",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-09",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-11",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "SYN-11",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "evaluate_existing_tool_first",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-05",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "request_clarification",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-05",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "request_clarification",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-07",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-07",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-17",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 4 model missing-information item(s) on a complete request",
+        "next_action 'evaluate_existing_tool_first' replaced by 'route_for_reviews' (allowed: route_for_reviews)"
+      ]
+    },
+    {
+      "case_id": "SYN-17",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "route_for_reviews",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "PUB-06",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "PUB-06",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-08",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    },
+    {
+      "case_id": "EXT-08",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 2 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-18",
+      "architecture": "staged",
+      "repeat": 3,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": [
+        "discarded 3 model missing-information item(s) on a complete request"
+      ]
+    },
+    {
+      "case_id": "SYN-18",
+      "architecture": "single",
+      "repeat": 3,
+      "next_action": "escalate_manual_review",
+      "all_correct": true,
+      "failures": [],
+      "corrections": []
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+# Procurement policy, expressed as configuration.
+#
+# The written policy (data/procurement_policy.md) is the source of truth for people.
+# This file is the source of truth for the code. `verify_setup.py` and the test suite
+# fail if the thresholds below drift from the written policy, so a policy edit
+# cannot silently diverge from enforcement.
+
+[policy]
+version = "2026.09"
+document = "data/procurement_policy.md"
+
+# §4 Financial approval thresholds. Upper bounds are inclusive; the last tier has none.
+[[approval_tiers]]
+up_to_usd = "1000"
+approvals = ["Manager"]
+
+[[approval_tiers]]
+up_to_usd = "10000"
+approvals = ["Department Head", "Procurement"]
+
+[[approval_tiers]]
+up_to_usd = "25000"
+approvals = ["Department Head", "Finance", "Procurement"]
+
+[[approval_tiers]]
+approvals = ["Department Head", "Finance", "CFO", "Procurement"]
+
+# §5 Security review
+[security]
+assessment_validity_days = 365
+
+# §7 Legal review
+[legal]
+new_vendor_spend_threshold_usd = "10000"
+
+# Order of work when a request needs specialist reviews and also overlaps an existing tool.
+# true: Security / Privacy / Legal reviews start first; the existing-tool check runs alongside
+# them and cannot replace them. Decided with Procurement; see docs/architecture_decision.md.
+[sequencing]
+specialist_reviews_before_overlap_check = true
+
+# §5-§6 Data classification register.
+#
+# Each class lists the labels that map to it. Matching is by whole words, never substrings.
+# A data-access label that matches no class is NOT treated as safe: Security and Privacy
+# are asked to classify it before approval (fail closed).
+[data_classes.none]
+labels = ["none", "no data", "no access", "no data access"]
+security = false
+privacy = false
+
+[data_classes.public]
+labels = ["public", "public data", "public content"]
+security = false
+privacy = false
+
+[data_classes.internal]
+labels = ["internal", "internal documents", "internal docs", "internal marketing", "internal data", "marketing content"]
+security = false
+privacy = false
+
+[data_classes.confidential]
+labels = ["confidential", "confidential documents", "contracts", "legal documents", "financial records", "financial statements", "board materials"]
+security = true
+privacy = false
+confidential = true
+
+[data_classes.source_code]
+labels = ["source code", "code repositories", "source repositories", "repositories", "repository"]
+security = true
+privacy = false
+
+[data_classes.production]
+labels = ["production", "production telemetry", "production data", "production systems", "production logs"]
+security = true
+privacy = false
+
+[data_classes.credentials]
+labels = ["credentials", "secrets", "api keys", "passwords", "access tokens"]
+security = true
+privacy = false
+
+[data_classes.employee_pii]
+labels = ["employee pii", "employee data", "employee records", "hr records", "hr data", "personnel records", "people data", "payroll", "payroll data", "salaries", "employee salaries"]
+security = true
+privacy = true
+
+[data_classes.customer_pii]
+labels = ["customer pii", "customer data", "customer records", "personal data", "pii"]
+security = true
+privacy = true
+
+[data_classes.special_category]
+labels = ["health records", "health data", "medical records", "biometric data", "special category data"]
+security = true
+privacy = true
+
+# §5 Integrations that require Security review. Whole-word matching.
+[integrations]
+security_sensitive = ["production", "cloud account", "git", "github", "gitlab", "repository", "repositories",
+                      "source control", "credentials", "secrets", "database", "api key", "api keys",
+                      "data warehouse", "aws", "azure", "gcp"]

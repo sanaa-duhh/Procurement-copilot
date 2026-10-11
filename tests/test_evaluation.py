@@ -49,3 +49,17 @@ def test_replication_panel_is_hidden_when_results_are_missing(tmp_path):
     from ui.comparison import load_replication
 
     assert load_replication(tmp_path) is None
+
+
+def test_replay_reruns_the_policy_layer_on_saved_drafts_without_tool_calls():
+    import json
+    from collections import Counter
+    from pathlib import Path
+
+    from replay import replay_record
+
+    root = Path(__file__).resolve().parents[1]
+    cases = {c["case_id"]: c for c in json.loads((root / "evals" / "cases.json").read_text())}
+    records = [json.loads(line) for line in (root / "evals/results/openai-repeats-20261011/decisions.jsonl").read_text().splitlines() if line.strip()]
+    passed = Counter(r["architecture"] for r in map(lambda rec: replay_record(rec, cases[rec["case_id"]]), records) if r["all_correct"])
+    assert passed == {"single": 54, "staged": 52}

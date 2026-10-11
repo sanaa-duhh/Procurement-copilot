@@ -1,6 +1,6 @@
 # Three-repeat replication: what changed and what held
 
-The same 18 labelled cases were run three times per architecture on the current source: 54 trials each, `gpt-6-astra` at medium reasoning, paired order shuffled with seed 42. No labels were changed after seeing outputs. There were no provider errors and no rate-limit retries.
+The same 18 labelled cases were run three times per architecture on source commit `334034e`: 54 trials each, `gpt-6-astra` at medium reasoning, paired order shuffled with seed 42. No labels were changed after seeing outputs. There were no provider errors and no rate-limit retries.
 
 | Measured result | Single | Staged |
 |---|---:|---:|
@@ -25,6 +25,12 @@ All seven staged failures come from one behaviour. When a request overlaps an ex
 - **PUB-02, two of three repeats.** Its next action is acceptable, but it adds a Privacy review because the vendor processes personal data, even though this request only touches internal marketing data. The guardrail keeps the extra approval by design: it adds approvals the model misses and never removes ones the model adds.
 
 The reasoning in each case is defensible, and no failure removed a required control. But the label encodes the policy's order of work, and the staged design departs from it repeatably, not at random.
+
+## The review order is now a policy rule
+
+The policy engine originally allowed both orders when reviews and overlap coexisted, so the guardrail could not catch the staged choice. That was a gap in the policy layer. The order is now explicit in `config/policy.toml`: specialist reviews start first, and the existing-tool question runs alongside them.
+
+[Replaying](replay.md) the saved drafts through the updated guardrail, without any model or tool calls, changes five staged trials from fail to pass: SYN-17 in all three repeats and PUB-03 in two. Staged's final score becomes 52/54; single stays at 54/54. The two remaining failures are the extra Privacy reviews on PUB-02, which the guardrail keeps by design. Raw-draft scores are unchanged at 54/54 and 42/54, because the drafts are the originals.
 
 ## Comparison with the first experiment
 

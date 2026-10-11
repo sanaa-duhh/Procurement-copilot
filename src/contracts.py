@@ -82,6 +82,7 @@ class CopilotDecision(ProcurementDecision):
 
     run_id: str | None = None
     request_fingerprint: str | None = None
+    policy_version: str | None = None
     next_action: NextAction | None = None
     rationale: str | None = None
     request_summary: str | None = None

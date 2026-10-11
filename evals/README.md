@@ -52,6 +52,16 @@ To continue unattempted trials after an interruption, repeat the original comman
 
 Cost is `null` unless both `--input-price` and `--output-price` are supplied in USD per million tokens. This is an estimate from recorded usage, excludes cache discounts/retry overhead and is not a provider invoice. A free tier does not make unknown token pricing zero.
 
+## Offline replay
+
+`evals/replay.py` reruns the current policy engine and guardrail over a saved experiment's original drafts and rescores them. The tool cache is pre-filled from each trial's saved log, and the replay fails if any lookup misses it, so no tool or model is called. Raw-draft scores cannot change. Use it to measure what a policy-layer change does to final decisions while holding model behaviour fixed.
+
+```bash
+uv run python evals/replay.py evals/results/openai-repeats-20261011
+```
+
+It writes `replay.json` and `replay.md` beside the experiment. Replayed scores are reported next to the live ones, never in place of them.
+
 ## Case design and limits
 
 `PUB-01..06` are the starter cases with stricter additional labels; `EXT-07..10` cover the remaining supplied requests. `SYN-11..18` cover CFO/threshold boundaries, absent budget, injection in a product name, an unknown vendor, employee PII and an injected vendor outage. `what_it_tests` explains each label.
