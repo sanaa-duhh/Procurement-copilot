@@ -4,7 +4,8 @@ The live provider for these runs is OpenAI. A scripted demo screenshot is UI evi
 
 | Directory | Purpose | Use in the architecture decision |
 |---|---|---|
-| `openai-comparison-20261008/` | Same 18 cases, one trial per architecture, paired order with seed 42 | Main comparison; read its completion status and the case analysis |
+| `openai-repeats-20261011/` | Same 18 cases, three trials per architecture on the current source, paired order with seed 42 | **Main evidence for the ship decision**; see its case analysis |
+| `openai-comparison-20261008/` | Same 18 cases, one trial per architecture, on the earlier source | First experiment; consistent with the replication, shown in the app's benchmark view |
 | `openai-precision-live-20261008/` | Four trials after the money-precision fix, covering SYN-12 and SYN-13 on both architectures | Targeted verification only; excluded from main comparison metrics |
 | `pilot-openai-live-20261008/` | One simple case through each architecture, confirming live tool calls and structured outputs | Integration check only; excluded from the main metrics |
 

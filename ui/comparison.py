@@ -11,6 +11,7 @@ from ui import runs
 from ui.history import configuration
 
 EXPERIMENT = "openai-comparison-20261008"
+REPLICATION = "openai-repeats-20261011"
 
 
 def load_benchmark(root: Path) -> tuple[dict, list[dict], dict]:
@@ -26,6 +27,31 @@ def load_benchmark(root: Path) -> tuple[dict, list[dict], dict]:
     if len(rows) != meta["case_count"] * 2 or len(keys) != len(rows) or keys != {(r["case_id"], r["architecture"]) for r in records}:
         raise ValueError("Comparison records are incomplete or duplicated")
     return report, rows, {(r["case_id"], r["architecture"]): r for r in records}
+
+
+def load_replication(root: Path) -> list[list[str]] | None:
+    """Headline rows from the three-repeat replication, or None if it is absent or incomplete."""
+    directory = root / "evals" / "results" / REPLICATION
+    try:
+        report = json.loads((directory / "summary.json").read_text())
+        with (directory / "runs.csv").open(newline="") as stream:
+            rows = list(csv.DictReader(stream))
+    except (OSError, ValueError):
+        return None
+    meta, summary = report.get("meta", {}), report.get("summary", {})
+    if not meta.get("complete") or meta.get("result_kind") != "model_experiment" or set(summary) != {"single", "staged"}:
+        return None
+
+    def count(arch: str, metric: str) -> str:
+        sub = [r for r in rows if r["architecture"] == arch]
+        return f"{sum(r[metric] == 'True' for r in sub)}/{len(sub)}"
+
+    return [
+        ["Final decision passes", count("single", "end_to_end_success"), count("staged", "end_to_end_success")],
+        ["Raw draft passes, before corrections", count("single", "raw_all_correct"), count("staged", "raw_all_correct")],
+        ["Average analysis time", *[f"{summary[a]['avg_latency_ms']/1000:.1f} s" for a in ("single", "staged")]],
+        ["Average estimated token cost", *[f"${summary[a]['avg_est_cost_usd']:.3f}" for a in ("single", "staged")]],
+    ]
 
 
 def render(root: Path, *, provider: str, model: str) -> None:
@@ -176,7 +202,13 @@ def render_benchmark(root: Path) -> None:
     table(["Measured result", "Single agent", "Analyst + reviewer"], metrics)
     reduction = 100*(1-summary["single"]["avg_latency_ms"]/summary["staged"]["avg_latency_ms"])
     text(f"The single agent used {reduction:.0f}% less time in this run. The second role added useful observations, but the results did not establish enough quality improvement to justify its extra calls.")
-    st.caption("One trial per architecture on a small, mostly policy-driven test set. This supports a supervised pilot; it does not establish production reliability. Costs are estimates before cache discounts.")
+    st.caption("One trial per architecture on a small, mostly policy-driven test set. Costs are estimates before cache discounts.")
+    replication = load_replication(root)
+    if replication:
+        st.subheader("Replication: three repeats")
+        st.caption("The same 18 cases rerun three times per architecture on the current source, 11 October 2026. 54 trials per architecture.")
+        table(["Measured result", "Single agent", "Analyst + reviewer"], replication)
+        text("The single agent passed every trial. The staged reviewer failed SYN-17 in all three repeats and PUB-02 and PUB-03 in some, each time preferring to check the existing tool first or adding an unneeded Privacy review.")
     st.subheader("Inspect a case")
     st.caption("Start with the disagreement: both designs preserve Security and Privacy reviews, but choose a different first step.")
     case_ids = sorted({r["case_id"] for r in rows})
@@ -208,7 +240,7 @@ def render_benchmark(root: Path) -> None:
         st.write("Six public cases, four other starter requests and eight additional edge cases. Both architectures use the same OpenAI model, reasoning setting, tools and final policy checks. Case order and architecture order were shuffled with seed 42.")
         st.write("The raw draft is scored before code corrections, and the final decision is scored afterwards. Provider errors remain failures even if the policy fallback returns a safe recommendation. Selected evidence achieved exact support in both designs; this does not independently validate free-form rationale.")
         st.write("Vendor calls exercise the supplied API handlers in-process in this experiment. The application uses HTTP. The model calls in the experiment are real.")
-        st.caption("Measured source: fd4f419. A later money-formatting fix was verified separately in four threshold trials; those trials are not pooled into these results. Failed integration attempts are retained in the repository.")
+        st.caption("Measured source: fd4f419. A later money-formatting fix was verified separately in four threshold trials; those trials are not pooled into these results. A three-repeat replication on the current source is shown above.")
         prices = meta.get("prices_usd_per_million")
         if prices:
             st.caption(f"Cost inputs: USD {prices[0]:g} per million input tokens and USD {prices[1]:g} per million output tokens. These are recorded experiment assumptions, not a current billing quote.")

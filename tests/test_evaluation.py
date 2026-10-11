@@ -31,3 +31,21 @@ def test_crashes_remain_in_quality_denominators(monkeypatch):
     assert summary["raw_all_correct_pct"] == 50
     assert summary["next_action_correct_pct"] == 50
     assert summary["end_to_end_success_pct"] == 50
+
+
+def test_replication_panel_reads_the_saved_three_repeat_run():
+    from pathlib import Path
+
+    from ui.comparison import load_replication
+
+    rows = load_replication(Path(__file__).resolve().parents[1])
+    assert rows is not None
+    by_metric = {r[0]: r[1:] for r in rows}
+    assert by_metric["Final decision passes"] == ["54/54", "47/54"]
+    assert by_metric["Raw draft passes, before corrections"] == ["54/54", "42/54"]
+
+
+def test_replication_panel_is_hidden_when_results_are_missing(tmp_path):
+    from ui.comparison import load_replication
+
+    assert load_replication(tmp_path) is None

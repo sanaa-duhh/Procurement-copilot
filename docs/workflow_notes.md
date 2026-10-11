@@ -48,6 +48,8 @@ Reviewing SYN-13 exposed rounded money in the policy engine's narrative evidence
 
 The UI audit also found clipped evidence and hidden references. Findings now expand to show full text and provenance; conflicts open by default. Model-proposed follow-up questions remain separate from policy-required intake fields and are visible to the human reviewer. The README screenshot is a labelled scripted demo, not live model evidence.
 
+**Replication, 11 October.** One repeat could not show whether the result was stable, so the same 18 cases were rerun three times per architecture on the current source. The single agent passed 54/54 with no corrections. Staged passed 47/54, and every failure traced to one habit: preferring to check existing-tool capacity before specialist reviews, plus an occasional precautionary Privacy review. The first run's 17/18 had understated this, because staged happened to pass PUB-03 that time. The ship decision is unchanged and now rests on the replication.
+
 ## Product interface review
 
 The original three-column screen gave long decisions and evidence too little room. The final interface separates request review from architecture comparison. Intake and the decision use the full workspace width; evidence, human review and diagnostics have dedicated tabs. Findings now show their complete text and references in cards. The comparison view reads the saved OpenAI experiment, including the original disagreement and limitations, without invoking either agent.

@@ -1,0 +1,37 @@
+{
+  "provider": "openai",
+  "model": "gpt-6-astra",
+  "effort": "medium",
+  "cases": [
+    "PUB-01",
+    "PUB-02",
+    "PUB-03",
+    "PUB-04",
+    "PUB-05",
+    "PUB-06",
+    "EXT-07",
+    "EXT-08",
+    "EXT-09",
+    "EXT-10",
+    "SYN-11",
+    "SYN-12",
+    "SYN-13",
+    "SYN-14",
+    "SYN-15",
+    "SYN-16",
+    "SYN-17",
+    "SYN-18"
+  ],
+  "architectures": [
+    "single",
+    "staged"
+  ],
+  "repeats": 3,
+  "seed": 42,
+  "source_sha256": "9dd48b107a72e9f41f2c9aeb6a546d5ab4055292af69153e1a1f484104dc1893",
+  "vendor_transport": "inprocess",
+  "prices": [
+    10.0,
+    50.0
+  ]
+}

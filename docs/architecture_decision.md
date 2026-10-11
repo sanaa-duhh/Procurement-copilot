@@ -1,17 +1,37 @@
 # Architecture decision
 
-**Ship the single agent for a supervised internal pilot.** It combines model judgement with code-owned policy checks and verified evidence; a human remains responsible for approvals and exceptions.
+**Ship the single agent for a supervised internal pilot.** It pairs model judgement with code-owned policy checks and verified evidence. A human stays responsible for every approval and exception.
 
-The [complete comparison](../evals/results/openai-comparison-20261008/summary.md) ran 18 cases once per architecture using OpenAI `gpt-6-astra`, medium reasoning, the same tools and guardrail, and paired order shuffled with seed 42. Real model calls used the actual vendor API handlers in-process. Source fingerprints and full traces are retained; incomplete integration pilots are excluded.
+## Evidence
 
-The single agent passed **18/18 final and raw-draft checks**. Staged passed **17/18 final checks and 14/18 raw-draft checks**. Both preserved the required approval sets and human-review boundary, had no provider failures, and achieved 100% exact support for selected evidence. Exact copying does not validate free-form rationale or independently prove the underlying facts.
+Both architectures ran the same 18 labelled cases three times on the current source: 108 live trials with OpenAI `gpt-6-astra` at medium reasoning. They shared the same tools, guardrail and output contract, with paired order shuffled with seed 42 ([summary](../evals/results/openai-repeats-20261011/summary.md), [case analysis](../evals/results/openai-repeats-20261011/case_analysis.md)).
 
-Single averaged **22.5 seconds and 3.94 model calls**, compared with **34.8 seconds and 4.94 calls** for staged: 35% lower observed latency. Indicative token cost was **$0.152 versus $0.222 per request**, using explicit input/output price assumptions. No rate-limit retries contributed to latency.
+| Metric | Single agent | Staged / 2-agent |
+|---|---:|---:|
+| Final checks passed | **54/54** | 47/54 |
+| Raw draft passed, before guardrail | **54/54** | 42/54 |
+| Human review and evidence support | 100% | 100% |
+| Mean latency | **16.3 s** | 28.5 s |
+| Mean model / tool calls | 3.94 / 7.74 | 4.94 / 7.74 |
+| Indicative cost per request | **$0.152** | $0.222 |
 
-The sole staged final failure, **SYN-17**, is a sequencing disagreement: it checks the existing DocSpace licence before routing the employee-PII use case for review. It retains Security and Privacy approvals, but the label requires reviews first. This is not evidence of an omitted privacy control. Accepting both sequences would make that case a tie; the latency/cost argument would still favour single. Labels were not relaxed after observing results.
+The [first experiment](../evals/results/openai-comparison-20261008/summary.md), one repeat on the earlier source, pointed the same way: 18/18 against 17/18. Neither run had provider errors or rate-limit retries.
 
-Staged needed 14 field corrections across 18 requests; single needed none. These mainly concern useful follow-up questions placed in the required-intake field, not fabricated evidence. The UI now exposes retained questions separately for human consideration. The staged reviewer also noticed rounded budget prose on **SYN-13**. A subsequent fix preserves cents; separate threshold trials and regression tests verify it without rewriting the original comparison.
+## Trade-offs
 
-The second role produced useful observations, but this experiment does not establish a quality gain that justifies its extra call and tokens. Keep staged available for further experiments, not as the default deployment.
+The single agent passed every trial and never needed a guardrail correction. It was 43% faster and 31% cheaper.
 
-The evidence is limited: one trial per architecture, a small developer-authored and mostly policy-driven case set, no independent judgement labels, and local vendor transport. Next, test independently labelled duplicate-versus-gap cases, resolve review sequencing with procurement stakeholders, and measure repeatability and HTTP/concurrency behaviour. Production rollout also requires authenticated reviewer roles, durable audit storage and real approval-system integration.
+The staged reviewer's seven failures share one cause. When a request overlaps an existing tool, it wants spare capacity verified before anything else, even when specialist reviews are required. It did this on SYN-17 in all three repeats and on PUB-03 in two. On PUB-02 it twice added an unneeded Privacy review. No failure dropped a required control, and each rationale is defensible. The behaviour is systematic, not random.
+
+The second role therefore adds a sceptical voice, not measured quality. It does so at the price of an extra model call, about 35% more tokens, and a 12-second wait per request.
+
+## Risks and limitations
+
+- **Labels.** The 18 cases are developer-labelled, and most test rules the code already enforces. Three repeats show consistency, not a larger sample.
+- **Sequencing.** Whether "check existing capacity" should come before specialist reviews is a procurement decision. The labels put reviews first, and the staged reviewer disagrees. Procurement owners should settle this before it is treated as settled policy.
+- **Judgement coverage.** Overlap judgement, where the model matters most, needs more independently labelled duplicate-versus-gap cases.
+- **Production.** Rollout needs authenticated reviewers, durable audit storage, real approval routing, and measurements over HTTP under concurrency.
+
+## Why this is the right MVP
+
+The policy that must never be wrong is enforced in code, so either architecture is safe. What remains is the quality of the model's own recommendation. On that, the simpler design matched the labels every time while the extra role departed from them repeatably. A second agent would add latency, cost and another prompt to maintain, without a measured benefit. The single agent is the stronger and simpler answer. Keep the staged design available for experiments on harder judgement cases.

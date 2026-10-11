@@ -6,7 +6,7 @@ Built by Sanaa for FDE Assessment 3. Deeper detail: [architecture](docs/architec
 
 ![Review workspace](docs/images/review-workspace.png)
 
-> **Ship decision: the single agent.** On the same 18 cases it passed 18/18 against the staged variant's 17/18, with 35% lower latency and about 31% lower token cost.
+> **Ship decision: the single agent.** Across 108 live trials on the same 18 cases, it passed 54/54 against the staged variant's 47/54, with 43% lower latency and about 31% lower token cost.
 
 ## Run it
 
@@ -21,7 +21,7 @@ Open http://127.0.0.1:8501. One command starts both the UI and the vendor-risk A
 For live analysis, put `OPENAI_API_KEY` in your shell or in `.env` (copy `.env.example`), then run `uv run python run_local.py`. The model is `gpt-6-astra` at medium reasoning effort, through the OpenAI Responses API.
 
 ```bash
-uv run pytest -q                                          # 130 offline tests, no key or server needed
+uv run pytest -q                                          # 132 offline tests, no key or server needed
 uv run python verify_setup.py                             # preflight checks
 uv run python evals/run_evals.py --provider openai        # full comparison, both architectures
 uv run python evals/run_public_evals.py --architecture single   # starter harness
@@ -111,36 +111,37 @@ Both use the same model, prompts for the ground rules, tools, guardrail and outp
 Both architectures ran the same 18 cases. Six are the public cases, four are the remaining starter requests, and eight are synthetic cases covering threshold boundaries, a missing budget line, injection in a product name, an unknown vendor, employee PII and an API outage. Each run is scored twice, on the model's raw draft and on the final decision, and latency, model calls, tool calls and tokens are recorded.
 
 <!-- RESULTS:BEGIN -->
-Full run: [summary](evals/results/openai-comparison-20261008/summary.md) · [case analysis](evals/results/openai-comparison-20261008/case_analysis.md) · [per-run CSV](evals/results/openai-comparison-20261008/runs.csv). The run used `gpt-6-astra` at medium reasoning, one trial per architecture, with paired order shuffled with seed 42.
+Main run: 18 cases × 3 repeats per architecture, 108 live trials on the current source, `gpt-6-astra` at medium reasoning, paired order shuffled with seed 42. [Summary](evals/results/openai-repeats-20261011/summary.md) · [case analysis](evals/results/openai-repeats-20261011/case_analysis.md) · [per-run CSV](evals/results/openai-repeats-20261011/runs.csv)
 
 | Measured result | Single | Staged |
 |---|---:|---:|
-| Final decision checks passed | **18/18** | 17/18 |
-| Raw draft checks passed, before guardrail | **18/18** | 14/18 |
-| Required approvals and human review preserved | 18/18 | 18/18 |
+| Final decision checks passed | **54/54** | 47/54 |
+| Raw draft checks passed, before guardrail | **54/54** | 42/54 |
+| Exact approval set / correct next action | 54 / 54 | 52 / 49 |
+| Human review preserved | 54/54 | 54/54 |
 | Draft evidence exactly supported | 100% | 100% |
-| Guardrail corrections, all cases | **0** | 14 |
-| Mean latency | **22.5 s** | 34.8 s |
-| p95 latency | 25.9 s | 38.8 s |
-| Mean model / tool calls | 3.94 / 7.83 | 4.94 / 7.78 |
-| Mean input / output tokens | 11,179 / 803 | 14,614 / 1,512 |
+| Guardrail corrections per request | **0** | 0.89 |
+| Mean latency (± sd) | **16.3 s ± 1.5** | 28.5 s ± 2.0 |
+| p95 latency | 19.7 s | 31.2 s |
+| Mean model / tool calls | 3.94 / 7.74 | 4.94 / 7.74 |
+| Mean input / output tokens | 11,166 / 805 | 14,603 / 1,514 |
 | Indicative cost per request | **$0.152** | $0.222 |
 | Provider failures / rate-limit retries | 0 / 0 | 0 / 0 |
 
 Cost uses $10 per million input tokens and $50 per million output tokens, from OpenAI's listed prices, excluding cache discounts.
 
-The run measured source commit `fd4f419`. A later fix keeps cents in budget evidence; it was verified in a separate [precision run](evals/results/openai-precision-live-20261008/verification.md), and the original scores are unchanged.
+The [first experiment](evals/results/openai-comparison-20261008/summary.md), one repeat on the earlier source, agreed: single 18/18, staged 17/18. The replication shows it understated staged's inconsistency.
 <!-- RESULTS:END -->
 
 ![Architecture comparison in the app](docs/images/architecture-comparison.png)
 
 ## Architecture comparison and ship decision
 
-**Ship the single agent for supervised use.** It matched or beat the staged variant on every quality measure, and it was faster and cheaper.
+**Ship the single agent for supervised use.** It passed every trial in both experiments, never needed a guardrail correction, and was faster and cheaper.
 
-The staged variant's one final failure was on **SYN-17**. It checked the existing DocSpace licence before routing an employee-PII request for review. It kept the Security and Privacy approvals; it disagreed with the label only on which step comes first. Most of its 14 corrections were useful follow-up questions placed in the missing-information field, not invented facts.
+All seven staged failures come from one repeatable behaviour. When a request overlaps an existing tool, the staged reviewer wants spare capacity checked first, even when specialist reviews are required. It did this on SYN-17 in all three repeats and on PUB-03 in two. On PUB-02 it twice added a Privacy review the request does not need. No failure dropped a required control, and the reasoning is defensible. But it departs from the policy's order of work consistently, while costing an extra model call and about 46% more per request.
 
-The second role added observations but no measurable quality gain to justify an extra model call and about 30% more tokens per request. The reasoning is in the [decision memo](docs/architecture_decision.md).
+The second role adds a sceptical voice, not measurable quality. The reasoning is in the [decision memo](docs/architecture_decision.md).
 
 ## Assumptions
 
@@ -152,7 +153,7 @@ The second role added observations but no measurable quality gain to justify an 
 
 ## Known limitations
 
-- **One trial per architecture.** The case set is small and developer-labelled, and most of it tests rules the code enforces, so it separates the two designs only weakly.
+- **Small labelled set.** The 18 cases are developer-labelled, and most test rules the code enforces. Three repeats show consistency, not a larger sample.
 - **Narrow judgement test.** Overlap judgement, where the model matters most, is tested mainly by REQ-1008.
 - **Injection detection.** It combines pattern matching with prompt instructions. It does not catch every paraphrase.
 - **Seat usage.** The catalog has no usage data, so spare existing seats cannot be verified.
