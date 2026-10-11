@@ -208,7 +208,7 @@ def render_benchmark(root: Path) -> None:
         st.write("Six public cases, four other starter requests and eight additional edge cases. Both architectures use the same OpenAI model, reasoning setting, tools and final policy checks. Case order and architecture order were shuffled with seed 42.")
         st.write("The raw draft is scored before code corrections, and the final decision is scored afterwards. Provider errors remain failures even if the policy fallback returns a safe recommendation. Selected evidence achieved exact support in both designs; this does not independently validate free-form rationale.")
         st.write("Vendor calls exercise the supplied API handlers in-process in this experiment. The application uses HTTP. The model calls in the experiment are real.")
-        st.caption("Measured source: 0de3dc7. A later money-formatting fix was verified separately in four threshold trials; those trials are not pooled into these results. Failed integration attempts are retained in the repository.")
+        st.caption("Measured source: fd4f419. A later money-formatting fix was verified separately in four threshold trials; those trials are not pooled into these results. Failed integration attempts are retained in the repository.")
         prices = meta.get("prices_usd_per_million")
         if prices:
             st.caption(f"Cost inputs: USD {prices[0]:g} per million input tokens and USD {prices[1]:g} per million output tokens. These are recorded experiment assumptions, not a current billing quote.")

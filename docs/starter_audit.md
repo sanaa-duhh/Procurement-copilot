@@ -2,7 +2,7 @@
 
 The application is built on the supplied **FDE Assessment 3 Starter Pack**. The working project lives at the repository root; `FDE_Assessment_3_Starter_Pack/` is an untouched local reference copy, not a second application to run.
 
-On 8 October 2026, the supplied pack was compared byte-for-byte with the working tree and with initial commit `49875e0`. That commit already contained the matching starter datasets, mock API, public cases/runner and integrity tests. Later commits implemented the deliberately empty adapter and extended the optional UI.
+On 8 October 2026, the supplied pack was compared byte-for-byte with the working tree and with initial commit `7d88337`. That commit already contained the matching starter datasets, mock API, public cases/runner and integrity tests. Later commits implemented the deliberately empty adapter and extended the optional UI.
 
 ## What is preserved
 
